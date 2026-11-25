@@ -1,0 +1,184 @@
+/* =====================================================
+   style.css - common styles + login / signup design
+   (chat.css can reuse the variables defined below)
+   ===================================================== */
+
+/* ---------- Colors (light mode) ---------- */
+:root {
+  --bg: #f0f2f5;
+  --card-bg: #ffffff;
+  --text: #111b21;
+  --muted: #667781;
+  --border: #d1d7db;
+  --input-bg: #ffffff;
+
+  --primary: #00a884;
+  --primary-hover: #008f6f;
+  --primary-text: #ffffff;
+
+  --error: #d93025;
+  --error-bg: #fdecea;
+
+  --warning-bg: #fff8e1;
+  --warning-border: #f5c518;
+  --warning-text: #6b5000;
+
+  --shadow: 0 8px 30px rgba(11, 20, 26, 0.12);
+  --radius: 12px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* ---------- Colors (dark mode, follows the device setting) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b141a;
+    --card-bg: #202c33;
+    --text: #e9edef;
+    --muted: #8696a0;
+    --border: #374248;
+    --input-bg: #2a3942;
+
+    --primary: #00a884;
+    --primary-hover: #06cf9c;
+    --primary-text: #06130f;
+
+    --error: #ff8a80;
+    --error-bg: #3b1f1f;
+
+    --warning-bg: #3a3214;
+    --warning-border: #b38f00;
+    --warning-text: #ffe082;
+
+    --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ---------- Basic common styles ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.4;
+}
+
+/* Lets us hide things with the "hidden" attribute (used by the JavaScript) */
+[hidden] { display: none !important; }
+
+/* =====================================================
+   Login + Signup pages (only on <body class="auth-page">)
+   ===================================================== */
+.auth-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.auth-page .auth-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px 28px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.auth-page .auth-title {
+  margin: 0 0 24px;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------- Form fields ---------- */
+.auth-page .field { margin-bottom: 16px; }
+
+.auth-page label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.auth-page input {
+  display: block;
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 16px;               /* 16px stops iPhones from zooming in */
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.auth-page input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 168, 132, 0.25);
+}
+
+/* ---------- Buttons ---------- */
+.auth-page .btn {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.auth-page .btn-primary { background: var(--primary); color: var(--primary-text); }
+.auth-page .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+
+.auth-page .btn-warning { background: var(--warning-border); color: #222; margin-top: 12px; }
+.auth-page .btn-warning:hover { filter: brightness(0.95); }
+
+.auth-page .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ---------- Error (red) and warning (yellow) boxes ---------- */
+.auth-page .error-box {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--error-bg);
+  color: var(--error);
+  font-size: 14px;
+}
+
+.auth-page .warning-box {
+  padding: 14px;
+  border: 1px solid var(--warning-border);
+  border-radius: 8px;
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+.auth-page .warning-text { margin: 0; font-size: 14.5px; line-height: 1.5; }
+
+/* ---------- Link to the other page ---------- */
+.auth-page .auth-switch {
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+.auth-page .auth-switch a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.auth-page .auth-switch a:hover { text-decoration: underline; }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 480px) {
+  .auth-page { padding: 12px; align-items: flex-start; padding-top: 8vh; }
+  .auth-page .auth-card { padding: 26px 20px; box-shadow: none; }
+}

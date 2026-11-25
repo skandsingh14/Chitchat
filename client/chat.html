@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/chat.css">
+</head>
+<body class="chat-page">
+
+  <div id="app" class="app">
+
+    <!-- ============ LEFT SIDE ============ -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="me">
+          <div id="myAvatar" class="avatar"></div>
+          <span id="myName" class="my-name"></span>
+        </div>
+        <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
+      </div>
+
+      <div class="search-box">
+        <input id="searchInput" type="search" placeholder="Search users to chat" autocomplete="off">
+      </div>
+
+      <ul id="searchResults" class="user-list search-results hidden"></ul>
+
+      <div class="list-title">Chats</div>
+      <ul id="conversationList" class="user-list conversation-list"></ul>
+    </aside>
+
+    <!-- ============ RIGHT SIDE ============ -->
+    <main id="chatPane" class="chat-pane">
+
+      <div id="placeholder" class="placeholder">
+        <div class="placeholder-title">Select a chat</div>
+        <div class="placeholder-text">Search for a user on the left to start chatting.<br>Your messages are end-to-end encrypted.</div>
+      </div>
+
+      <section id="chatWindow" class="chat-window hidden">
+        <header class="chat-header">
+          <button id="backBtn" class="back-btn" type="button" aria-label="Back to chats">&larr;</button>
+          <div id="headerAvatar" class="header-avatar"></div>
+          <div class="header-info">
+            <div id="chatTitle" class="chat-title"></div>
+            <div id="chatStatus" class="chat-status"></div>
+          </div>
+
+          <!-- BATCH A: search in chat button -->
+          <button id="chatSearchBtn" class="icon-btn" type="button" title="Search in chat">&#128269;</button>
+
+          <!-- BATCH B: disappearing messages timer button -->
+          <button id="timerBtn" class="icon-btn" type="button" title="Disappearing messages">&#9201;</button>
+        </header>
+
+        <!-- BATCH A: search bar -->
+        <div id="chatSearchBar" class="chat-search-bar hidden">
+          <input id="chatSearchInput" type="text" placeholder="Search in chat..." autocomplete="off">
+          <span id="chatSearchCount" class="chat-search-count"></span>
+          <button id="chatSearchPrev" class="icon-btn" type="button" title="Previous">&#9650;</button>
+          <button id="chatSearchNext" class="icon-btn" type="button" title="Next">&#9660;</button>
+          <button id="chatSearchClose" class="icon-btn" type="button" title="Close">&#10005;</button>
+        </div>
+
+        <div id="messages" class="messages"></div>
+
+        <!-- BATCH B: shown while editing a message -->
+        <div id="editBanner" class="edit-banner hidden">
+          <span>Editing message</span>
+          <button id="editCancel" class="icon-btn" type="button" title="Cancel">&#10005;</button>
+        </div>
+
+        <div class="composer">
+          <textarea id="messageInput" rows="1" placeholder="Type a message" autocomplete="off"></textarea>
+          <button id="sendBtn" class="send-btn" type="button" aria-label="Send">&#10148;</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="js/chat.js"></script>
+</body>
+</html>

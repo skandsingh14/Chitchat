@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+
+  <main class="auth-card">
+    <h1 class="auth-title">Login</h1>
+
+    <!-- Login form -->
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username"
+               autocapitalize="none" spellcheck="false" required>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+
+      <!-- Error message (filled by auth.js) -->
+      <div id="errorBox" class="error-box" role="alert" hidden></div>
+
+      <button id="submitBtn" class="btn btn-primary" type="submit">Login</button>
+    </form>
+
+    <!-- Warning shown when this browser has no encryption keys (hidden by default) -->
+    <div id="keyWarning" class="warning-box" role="alert" hidden>
+      <p class="warning-text">Is browser mein tumhari encryption key nahi hai, purane messages decrypt nahi honge</p>
+      <button id="continueBtn" class="btn btn-warning" type="button">Continue</button>
+    </div>
+
+    <p class="auth-switch">Don't have an account? <a href="signup.html">Sign up</a></p>
+  </main>
+
+  <script type="module" src="js/auth.js"></script>
+</body>
+</html>

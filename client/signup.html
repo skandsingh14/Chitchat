@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign up</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+
+  <main class="auth-card">
+    <h1 class="auth-title">Sign up</h1>
+
+    <!-- Signup form -->
+    <form id="signupForm" novalidate>
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username"
+               autocapitalize="none" spellcheck="false" required>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" required>
+      </div>
+
+      <div class="field">
+        <label for="confirmPassword">Confirm password</label>
+        <input id="confirmPassword" name="confirmPassword" type="password"
+               autocomplete="new-password" required>
+      </div>
+
+      <!-- Error message (filled by auth.js) -->
+      <div id="errorBox" class="error-box" role="alert" hidden></div>
+
+      <button id="submitBtn" class="btn btn-primary" type="submit">Signup</button>
+    </form>
+
+    <p class="auth-switch">Already have an account? <a href="index.html">Log in</a></p>
+  </main>
+
+  <script type="module" src="js/auth.js"></script>
+</body>
+</html>
