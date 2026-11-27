@@ -12,10 +12,48 @@
 //   8. [DELETE MSG] Delete a message for me / for everyone
 //   9. [HEADER MENU] One ⋮ menu in the chat header (Search + Disappearing soon)
 //  10. [FRIENDS] Friends list: floating + button, panel, add / remove
+//  11. [THEME + USER MENU] Dark theme toggle + sidebar ⋮ menu (Dark theme / Logout)
 
 import { apiGet, apiPost, apiPatch, apiDelete } from "./api.js";
 import { encryptMessage, decryptMessage } from "./crypto.js";
 import { connectSocket, disconnectSocket } from "./socket.js";
+
+// =====================================================
+// THEME (sabse pehle chalta hai, app render hone se pehle)
+// =====================================================
+const THEME_KEY = "theme"; // localStorage key: "dark" ya "light"
+
+// Saved theme padho (localStorage band ho to "light")
+function readSavedTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
+// Theme lagao: body pe "dark" class on/off
+function applyTheme(theme) {
+  if (!document.body) return;
+  document.body.classList.toggle("dark", theme === "dark");
+}
+
+function isDarkTheme() {
+  return !!document.body && document.body.classList.contains("dark");
+}
+
+// Toggle karo aur choice save karo
+function toggleTheme() {
+  const next = isDarkTheme() ? "light" : "dark";
+  applyTheme(next);
+  try {
+    localStorage.setItem(THEME_KEY, next);
+  } catch {
+    // storage band hai, koi baat nahi
+  }
+}
+
+applyTheme(readSavedTheme());
 
 // ---------- Small settings ----------
 const DECRYPT_ERROR_TEXT = "Message decrypt nahi ho paya";
@@ -34,9 +72,8 @@ const STATUS_RANK = { sent: 1, delivered: 2, read: 3 };
 const $ = (id) => document.getElementById(id);
 const app = $("app");
 const sidebar = $("sidebar");
-const myAvatar = $("myAvatar");
 const myName = $("myName");
-const logoutBtn = $("logoutBtn");
+const userMenuBtn = $("userMenuBtn"); // sidebar ka ⋮ button (pehle logoutBtn tha)
 const searchInput = $("searchInput");
 const searchResults = $("searchResults");
 const conversationList = $("conversationList");
@@ -101,7 +138,7 @@ let stopTypingTimer = null;
 let searchTimer = null;
 let searchSeq = 0;
 
-// chat-list menu state (also used by the message menu and the header menu)
+// chat-list menu state (also used by the message menu, the header menu and the user menu)
 let showArchived = false;
 let openMenu = null;                    // { el, id }
 
@@ -1093,6 +1130,50 @@ function toggleChatMenu(anchorBtn) {
 }
 
 // =====================================================
+// USER MENU: sidebar header ka ⋮ (Dark theme + Logout)
+// =====================================================
+
+// Logout: bilkul purane logout button jaisa
+function doLogout() {
+  disconnectSocket();
+  sessionStorage.clear();
+  window.location.href = "index.html";
+}
+
+function toggleUserMenu(anchorBtn) {
+  const menuId = "user-menu";
+  const wasOpen = openMenu && openMenu.id === menuId;
+  closeMenu();
+  closePicker();
+  if (wasOpen) return;
+
+  const menu = el("div", "chat-menu");
+
+  // Dark theme: label me abhi ki state dikhti hai (On / Off)
+  menu.appendChild(
+    menuItem("Dark theme: " + (isDarkTheme() ? "On" : "Off"), () => {
+      closeMenu();
+      toggleTheme();
+    })
+  );
+
+  // Logout (danger style)
+  menu.appendChild(
+    menuItem(
+      "Logout",
+      () => {
+        closeMenu();
+        doLogout();
+      },
+      true
+    )
+  );
+
+  placeMenu(menu, anchorBtn);
+  openMenu = { el: menu, id: menuId };
+}
+
+// =====================================================
 // DELETE MSG: delete for me / delete for everyone
 // =====================================================
 
@@ -1453,8 +1534,7 @@ function startApp() {
   } catch {
     // ignore broken data
   }
-  myName.textContent = me.username || "";
-  myAvatar.textContent = (me.username || "?").charAt(0).toUpperCase();
+  if (myName) myName.textContent = me.username || "";
 
   buildFriendsUI(); // FRIENDS: + button aur panel banao
 
@@ -1495,11 +1575,15 @@ function startApp() {
     }
   });
   backBtn.addEventListener("click", closeChat);
-  logoutBtn.addEventListener("click", () => {
-    disconnectSocket();
-    sessionStorage.clear();
-    window.location.href = "index.html";
-  });
+
+  // Sidebar ⋮ menu (Dark theme + Logout). stopPropagation zaroori hai,
+  // warna document click turant menu band kar dega
+  if (userMenuBtn) {
+    userMenuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleUserMenu(userMenuBtn);
+    });
+  }
 
   // Header ⋮ menu (stopPropagation zaroori hai, warna document click turant band kar dega)
   chatMenuBtn.addEventListener("click", (e) => {
@@ -1533,6 +1617,8 @@ function startApp() {
     if (chatSearchOpen) closeChatSearch();
   });
   conversationList.addEventListener("scroll", closeMenu);
+  searchResults.addEventListener("scroll", closeMenu);              // user menu: results scroll pe band
+  if (friendsList) friendsList.addEventListener("scroll", closeMenu); // user menu: friends scroll pe band
   messagesEl.addEventListener("scroll", closePicker);
   messagesEl.addEventListener("scroll", closeMenu);   // DELETE MSG + header menu
   window.addEventListener("resize", closeMenu);

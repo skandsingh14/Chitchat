@@ -22,6 +22,50 @@
   --wa-mark-active: #fb923c;    /* active search match */
   --wa-react-mine-bg: #fce7f3;
   --wa-react-mine-border: #f4a6cb;
+
+  /* THEME: pehle hard-coded the, ab variables (dark me badalte hain) */
+  --wa-danger-bg: #fdecec;                    /* logout hover bg */
+  --wa-danger-border: #e5a3a3;                /* logout hover border */
+  --wa-loading-bg: rgba(255, 255, 255, 0.85); /* "Loading messages..." box */
+  --wa-shadow-rgb: 80, 7, 36;                 /* shadow ka color (r, g, b) */
+  --wa-accent-rgb: 225, 29, 116;              /* glow ka color (r, g, b) */
+}
+
+/* =====================================================
+   DARK THEME: body pe class "dark" lagte hi variables badal jate hain
+   ===================================================== */
+.chat-page.dark {
+  --wa-green: #f472b6;
+  --wa-green-hover: #ec4899;
+  --wa-bubble-mine: #7a1f4f;
+  --wa-bubble-theirs: #2e1a25;
+  --wa-chat-bg: #170b12;
+  --wa-panel: #2a1621;
+  --wa-border: #4a2a3b;
+  --wa-text: #fce7f3;
+  --wa-muted: #c79ab3;
+  --wa-tick: #e0b0c9;
+  --wa-tick-read: #7dd3fc;
+  --wa-badge: #f472b6;
+
+  --wa-white: #241420;          /* "white" surface ab dark hai */
+  --wa-hover: #2f1a27;
+  --wa-active: #3a2030;
+  --wa-press: #43263a;
+  --wa-danger: #f87171;
+  --wa-mark: #854d0e;
+  --wa-mark-active: #c2410c;
+  --wa-react-mine-bg: #5a1a3d;
+  --wa-react-mine-border: #9d3a6c;
+
+  --wa-danger-bg: #3a1620;
+  --wa-danger-border: #7a3345;
+  --wa-loading-bg: rgba(36, 20, 32, 0.9);
+  --wa-shadow-rgb: 0, 0, 0;
+  --wa-accent-rgb: 244, 114, 182;
+
+  color-scheme: dark;           /* scrollbar / inputs bhi dark */
+  background: #1f1018;          /* page ka background */
 }
 
 /* Helper class used by the JavaScript to hide things */
@@ -49,7 +93,7 @@ html, body { height: 100%; }
   max-width: 1600px;
   margin: 0 auto;
   background: var(--wa-white);
-  box-shadow: 0 1px 6px rgba(80, 7, 36, 0.2);
+  box-shadow: 0 1px 6px rgba(var(--wa-shadow-rgb), 0.2);
 }
 
 /* ---------- Sidebar (left) ---------- */
@@ -97,8 +141,8 @@ html, body { height: 100%; }
   font-size: 14px;
   cursor: pointer;
 }
-/* logout hover: halka red (danger) tint, same as pehle */
-.chat-page .logout-btn:hover { background: #fdecec; border-color: #e5a3a3; }
+/* logout hover: halka red (danger) tint, ab variables se (dark me bhi sahi dikhe) */
+.chat-page .logout-btn:hover { background: var(--wa-danger-bg); border-color: var(--wa-danger-border); }
 
 .chat-page .search-box { padding: 8px 12px; background: var(--wa-white); }
 
@@ -292,7 +336,7 @@ html, body { height: 100%; }
   padding: 6px 0;
   border-radius: 8px;
   background: var(--wa-white);
-  box-shadow: 0 2px 12px rgba(80, 7, 36, 0.28);
+  box-shadow: 0 2px 12px rgba(var(--wa-shadow-rgb), 0.28);
 }
 
 .chat-page .menu-item {
@@ -478,7 +522,7 @@ html, body { height: 100%; }
   margin-top: 20px;
   padding: 6px 12px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--wa-loading-bg);
   color: var(--wa-muted);
   font-size: 13px;
 }
@@ -494,7 +538,7 @@ html, body { height: 100%; }
   background: var(--wa-white);
   color: var(--wa-muted);
   font-size: 12.5px;
-  box-shadow: 0 1px 0.5px rgba(80, 7, 36, 0.13);
+  box-shadow: 0 1px 0.5px rgba(var(--wa-shadow-rgb), 0.13);
 }
 
 .chat-page .msg-row { display: flex; }
@@ -540,7 +584,7 @@ html, body { height: 100%; }
   box-sizing: border-box;
   padding: 6px 9px 4px;
   border-radius: 8px;
-  box-shadow: 0 1px 0.5px rgba(80, 7, 36, 0.13);
+  box-shadow: 0 1px 0.5px rgba(var(--wa-shadow-rgb), 0.13);
   font-size: 14.5px;
   line-height: 1.35;
 }
@@ -584,7 +628,7 @@ html, body { height: 100%; }
   border: none;
   border-radius: 50%;
   background: var(--wa-white);
-  box-shadow: 0 1px 3px rgba(80, 7, 36, 0.3);
+  box-shadow: 0 1px 3px rgba(var(--wa-shadow-rgb), 0.3);
   font-size: 14px;
   line-height: 26px;
   text-align: center;
@@ -615,7 +659,7 @@ html, body { height: 100%; }
   padding: 4px 6px;
   border-radius: 22px;
   background: var(--wa-white);
-  box-shadow: 0 2px 10px rgba(80, 7, 36, 0.3);
+  box-shadow: 0 2px 10px rgba(var(--wa-shadow-rgb), 0.3);
   white-space: nowrap;
 }
 .chat-page .mine .react-picker { right: 0; }
@@ -658,7 +702,7 @@ html, body { height: 100%; }
   border: 1px solid var(--wa-border);
   border-radius: 12px;
   background: var(--wa-white);
-  box-shadow: 0 1px 1px rgba(80, 7, 36, 0.15);
+  box-shadow: 0 1px 1px rgba(var(--wa-shadow-rgb), 0.15);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -754,7 +798,7 @@ html, body { height: 100%; }
   border: none;
   border-radius: 50%;
   background: var(--wa-white);
-  box-shadow: 0 1px 3px rgba(80, 7, 36, 0.3);
+  box-shadow: 0 1px 3px rgba(var(--wa-shadow-rgb), 0.3);
   color: var(--wa-muted);
   font-size: 16px;
   line-height: 26px;
@@ -803,20 +847,20 @@ html, body { height: 100%; }
   background-position: center 5px, center 13px, center 21px;
 
   /* neeche halki parchhai = 3D feel */
-  filter: drop-shadow(0 2px 1.5px rgba(80, 7, 36, 0.4));
+  filter: drop-shadow(0 2px 1.5px rgba(var(--wa-shadow-rgb), 0.4));
   transition: transform 0.15s ease, filter 0.15s ease, background-position 0.25s ease;
 }
 
 /* hover: dots ek ke baad ek uchhalte hain (wave) */
 .chat-page #chatMenuBtn:hover {
-  filter: drop-shadow(0 3px 2px rgba(80, 7, 36, 0.45));
+  filter: drop-shadow(0 3px 2px rgba(var(--wa-shadow-rgb), 0.45));
   animation: dotsWave 0.6s ease;
 }
 
 /* dabane par thoda andar dabta hai */
 .chat-page #chatMenuBtn:active {
   transform: translateY(1px) scale(0.88);
-  filter: drop-shadow(0 1px 1px rgba(80, 7, 36, 0.4));
+  filter: drop-shadow(0 1px 1px rgba(var(--wa-shadow-rgb), 0.4));
 }
 
 /* keyboard focus: dots thode phail jate hain */
@@ -840,7 +884,7 @@ html, body { height: 100%; }
   padding: 10px 14px;
   background: linear-gradient(180deg, var(--wa-white), var(--wa-chat-bg));
   border-bottom: 1px solid var(--wa-border);
-  box-shadow: 0 4px 14px rgba(225, 29, 116, 0.12);
+  box-shadow: 0 4px 14px rgba(var(--wa-accent-rgb), 0.12);
   animation: searchBarIn 0.25s ease-out;   /* khulte waqt upar se slide */
 }
 
@@ -862,7 +906,7 @@ html, body { height: 100%; }
   font-family: inherit;
   font-size: 15px;
   outline: none;
-  box-shadow: inset 0 1px 3px rgba(80, 7, 36, 0.08);
+  box-shadow: inset 0 1px 3px rgba(var(--wa-shadow-rgb), 0.08);
   transition: border-color 0.15s, box-shadow 0.15s;
 
   /* 🔍 icon (pink, SVG) input ke andar */
@@ -873,7 +917,7 @@ html, body { height: 100%; }
 .chat-page #chatSearchInput::placeholder { color: var(--wa-muted); }
 .chat-page #chatSearchInput:focus {
   border-color: var(--wa-green);
-  box-shadow: 0 0 0 4px rgba(225, 29, 116, 0.15);   /* pink glow */
+  box-shadow: 0 0 0 4px rgba(var(--wa-accent-rgb), 0.15);   /* pink glow */
 }
 
 /* "2 of 5" ek chhoti pill me; khali ho to chhup jaye */
@@ -938,7 +982,7 @@ html, body { height: 100%; }
   font-family: inherit;
   font-size: 15px;
   outline: none;
-  box-shadow: inset 0 1px 3px rgba(80, 7, 36, 0.08);
+  box-shadow: inset 0 1px 3px rgba(var(--wa-shadow-rgb), 0.08);
   transition: border-color 0.15s, box-shadow 0.2s, transform 0.2s;
   -webkit-appearance: none;
   appearance: none;
@@ -952,12 +996,12 @@ html, body { height: 100%; }
 .chat-page .search-box input#searchInput::placeholder { color: var(--wa-muted); }
 
 /* hover: halka pink border */
-.chat-page .search-box input#searchInput:hover { border-color: #f4a6cb; }
+.chat-page .search-box input#searchInput:hover { border-color: var(--wa-react-mine-border); }
 
 /* focus: pink glow + thoda sa upar uthta hai */
 .chat-page .search-box input#searchInput:focus {
   border-color: var(--wa-green);
-  box-shadow: 0 0 0 4px rgba(225, 29, 116, 0.15), 0 4px 12px rgba(225, 29, 116, 0.12);
+  box-shadow: 0 0 0 4px rgba(var(--wa-accent-rgb), 0.15), 0 4px 12px rgba(var(--wa-accent-rgb), 0.12);
   transform: translateY(-1px);
 }
 
@@ -1036,7 +1080,7 @@ html, body { height: 100%; }
   border: none;
   border-radius: 50%;
   background: var(--wa-green);
-  color: #fff;                              /* sirf "+" white */
+  color: var(--wa-white);                   /* light me white, dark me dark (pink pe readable) */
   font-size: 30px;
   line-height: 1;
   box-shadow: 0 3px 8px var(--wa-muted);
@@ -1165,3 +1209,70 @@ html, body { height: 100%; }
   .chat-page .friends-back:hover::before,
   .chat-page .friends-back:active::before { transform: none; }
 }
+
+/* =====================================================
+   SIDEBAR HEADER REDESIGN (NAYA): sirf naam + ⋮ menu button
+   ===================================================== */
+
+/* naam ko jagah do, taaki ⋮ button hamesha right me rahe */
+.chat-page .me { flex: 1; }
+
+/* naam: thoda bada, semi-bold, ellipsis (lamba naam ... ban jayega) */
+.chat-page .my-name {
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.2px;
+  color: var(--wa-text);                     /* fallback */
+}
+
+/* gradient text (text -> accent). Support na ho to upar wala simple color chalega */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .chat-page .my-name {
+    background: linear-gradient(90deg, var(--wa-text), var(--wa-green-hover));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+
+/* ⋮ user menu button: #chatMenuBtn jaisa simple round button */
+.chat-page #userMenuBtn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--wa-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  outline: none;
+}
+.chat-page #userMenuBtn:hover,
+.chat-page #userMenuBtn:focus { background: var(--wa-press); }
+
+/* =====================================================
+   DARK THEME FIXES (NAYA): jo cheezein sirf variable se theek nahi hoti
+   ===================================================== */
+
+/* avatar: dark surface pe thoda alag gol dikhe */
+.chat-page.dark .avatar { background: var(--wa-active); color: var(--wa-green); }
+
+/* meri bubble (dark pink) pe time/ticks thode halke, taaki padhe jayein */
+.chat-page.dark .mine .msg-meta { color: #f0c8dc; }
+
+/* chhoti pills / buttons ka text accent me (contrast better) */
+.chat-page.dark .chat-search-count { color: var(--wa-green); }
+.chat-page.dark .chat-search-bar .icon-btn { color: var(--wa-green); }
+.chat-page.dark .reaction-chip.mine .reaction-count { color: var(--wa-green); }
+
+/* placeholders ka color (dark me default bohot dim hota hai) */
+.chat-page .composer textarea::placeholder,
+.chat-page .search-box input::placeholder,
+.chat-page .chat-search-input::placeholder { color: var(--wa-muted); }

@@ -8,6 +8,12 @@
   <link rel="stylesheet" href="css/chat.css">
 </head>
 <body class="chat-page">
+  <script>
+    // Theme flash se bachne ke liye: page dikhne se pehle hi dark class laga do
+    try {
+      if (localStorage.getItem("theme") === "dark") document.body.classList.add("dark");
+    } catch (e) {}
+  </script>
 
   <div id="app" class="app">
 
@@ -15,10 +21,10 @@
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-header">
         <div class="me">
-          <div id="myAvatar" class="avatar"></div>
           <span id="myName" class="my-name"></span>
         </div>
-        <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
+        <!-- Ek hi three-dot menu (Dark theme + Logout) -->
+        <button id="userMenuBtn" class="icon-btn" type="button" aria-label="Menu">&#8942;</button>
       </div>
 
       <div class="search-box">
