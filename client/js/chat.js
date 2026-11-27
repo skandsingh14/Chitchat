@@ -519,9 +519,49 @@ async function addFriend(user) {
 }
 
 // Sirf friends list se hatata hai. conversations Map / messages ko haath nahi lagata.
+function confirmRemoveFriend(username) {
+  return new Promise((resolve) => {
+    const dialog = el("dialog", "confirm-dialog");
+    const content = el("div", "confirm-dialog-content");
+    const icon = el("div", "confirm-icon", "!");
+    icon.setAttribute("aria-hidden", "true");
+    const title = el("h2", "", "Remove friend?");
+    const message = el("p", "", "Kya tum " + (username || "is friend") + " ko friends list se remove karna chahte ho?");
+    const actions = el("div", "confirm-actions");
+    const cancelBtn = el("button", "confirm-cancel", "No, keep");
+    const removeBtn = el("button", "confirm-remove", "Yes, remove");
+    cancelBtn.type = "button";
+    removeBtn.type = "button";
+    actions.append(cancelBtn, removeBtn);
+    content.append(icon, title, message, actions);
+    dialog.appendChild(content);
+    document.body.appendChild(dialog);
+
+    let settled = false;
+    const finish = (confirmed) => {
+      if (settled) return;
+      settled = true;
+      dialog.close();
+      dialog.remove();
+      resolve(confirmed);
+    };
+    cancelBtn.addEventListener("click", () => finish(false));
+    removeBtn.addEventListener("click", () => finish(true));
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      finish(false);
+    });
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) finish(false);
+    });
+    dialog.showModal();
+    cancelBtn.focus();
+  });
+}
+
 async function removeFriend(id, username) {
   closeMenu();
-  if (!window.confirm("Remove " + (username || "this user") + " from friends?")) return;
+  if (!(await confirmRemoveFriend(username))) return;
   try {
     await apiDelete("/api/friends/" + id);
     friends.delete(id);
