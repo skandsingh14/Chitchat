@@ -1121,3 +1121,47 @@ html, body { height: 100%; }
 .chat-page .sidebar.friends-open .search-results,
 .chat-page .sidebar.friends-open .list-title,
 .chat-page .sidebar.friends-open .conversation-list { display: none; }
+
+
+/* =====================================================
+   FRIENDS BACK ARROW (←): interactive
+   ===================================================== */
+.chat-page .friends-back {
+  position: relative;
+  font-size: 0;                       /* purana text chhupa diya, arrow ::before se aayega */
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+/* arrow ab pseudo element hai, taaki sirf arrow hil sake (circle nahi) */
+.chat-page .friends-back::before {
+  content: "\2190";
+  display: block;
+  font-size: 20px;
+  line-height: 34px;
+  color: var(--wa-text);
+  transition: transform 0.2s ease, color 0.15s;
+}
+
+/* hover: circle pink ho jata hai, arrow left ki taraf sarakta hai */
+.chat-page .friends-back:hover,
+.chat-page .friends-back:focus-visible {
+  background: var(--wa-green);
+  box-shadow: 0 2px 6px var(--wa-muted);
+}
+.chat-page .friends-back:hover::before,
+.chat-page .friends-back:focus-visible::before {
+  color: var(--wa-white);
+  transform: translateX(-3px);
+}
+
+/* dabane par thoda andar dabta hai */
+.chat-page .friends-back:active { transform: scale(0.9); }
+.chat-page .friends-back:active::before { transform: translateX(-6px); }
+
+/* jinko animation pasand nahi (device setting) */
+@media (prefers-reduced-motion: reduce) {
+  .chat-page .friends-back,
+  .chat-page .friends-back::before { transition: none; }
+  .chat-page .friends-back:hover::before,
+  .chat-page .friends-back:active::before { transform: none; }
+}
