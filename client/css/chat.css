@@ -484,6 +484,29 @@ html, body { height: 100%; }
 }
 .chat-page .mine .msg-wrap { align-items: flex-end; }
 .chat-page .theirs .msg-wrap { align-items: flex-start; }
+/* HOVER FIX: invisible area jo buttons tak ka gap bhar deta hai.
+   ::before .msg-wrap ka hi part hai, isliye mouse yahan ho to
+   .msg-wrap:hover true rehta hai aur buttons dikhte rehte hain. */
+.chat-page .msg-wrap::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 70px;            /* 62px (⋮ ka left) + thoda extra */
+  background: transparent;
+}
+
+/* mine: buttons bubble ke LEFT me */
+.chat-page .mine .msg-wrap::before { left: -70px; }
+
+/* theirs: buttons bubble ke RIGHT me */
+.chat-page .theirs .msg-wrap::before { right: -70px; }
+
+/* Touch screens: hover hota hi nahi, isliye ye area band kar do
+   taaki khali jagah par tap block na ho */
+@media (hover: none) {
+  .chat-page .msg-wrap::before { display: none; }
+}
 
 .chat-page .bubble {
   max-width: 100%;
@@ -690,4 +713,36 @@ html, body { height: 100%; }
   .chat-page .messages { padding: 12px 10px; }
   .chat-page .msg-wrap { max-width: 85%; }
   .chat-page .chat-search-count { min-width: 48px; }
+}
+/* DELETE MSG: the ⋮ button next to a message */
+.chat-page .msg-menu-btn {
+  position: absolute;
+  top: 4px;
+  display: none;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(11, 20, 26, 0.3);
+  color: var(--wa-muted);
+  font-size: 16px;
+  line-height: 26px;
+  text-align: center;
+  cursor: pointer;
+}
+.chat-page .mine .msg-menu-btn { left: -62px; }
+.chat-page .theirs .msg-menu-btn { right: -62px; }
+
+.chat-page .msg-wrap:hover .msg-menu-btn,
+.chat-page .msg-wrap.show-actions .msg-menu-btn { display: block; }
+.chat-page .msg-menu-btn:hover,
+.chat-page .msg-menu-btn:focus { background: #f0f2f5; outline: none; }
+
+/* On phones there is no hover, so the button only shows after a tap */
+@media (hover: none) {
+  .chat-page .msg-wrap:hover .msg-menu-btn { display: none; }
+  .chat-page .msg-wrap.show-actions .msg-menu-btn { display: block; }
 }

@@ -21,6 +21,16 @@ const messageSchema = new mongoose.Schema({
     ],
     default: [],
   },
+
+  // [DELETE MSG] NEW FIELD: "Delete for me".
+  // It holds the ids of users who deleted this message only for themselves.
+  // The message stays in the database for the other person.
+  // When BOTH people have deleted it, the server removes it from the database fully.
+  // (Old messages do not have this field. That is fine, it just counts as an empty list.)
+  deletedFor: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    default: [],
+  },
 });
 
 // Makes loading a conversation between two users fast

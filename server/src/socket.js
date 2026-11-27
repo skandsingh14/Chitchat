@@ -262,6 +262,67 @@ export function initSocket(httpServer) {
       }
     });
 
+        // ---------- DELETE MSG: Delete for me ----------
+    // data = { messageId }
+    socket.on("delete-for-me", async (data, cb) => {
+      const reply = typeof cb === "function" ? cb : () => {};
+      try {
+        if (!data || typeof data.messageId !== "string" || !mongoose.isValidObjectId(data.messageId)) {
+          return reply({ error: "Invalid message" });
+        }
+        const message = await Message.findById(data.messageId);
+        if (!message) return reply({ error: "Message not found" });
+
+        const senderId = String(message.from);
+        const receiverId = String(message.to);
+        if (userId !== senderId && userId !== receiverId) return reply({ error: "Not allowed" });
+
+        const otherId = userId === senderId ? receiverId : senderId;
+        const otherDeleted = message.deletedFor.some((u) => String(u) === otherId);
+
+        if (otherDeleted) {
+          // Dono ne delete kar diya -> database se poora hata do
+          await Message.deleteOne({ _id: message._id });
+        } else {
+          await Message.updateOne({ _id: message._id }, { $addToSet: { deletedFor: userId } });
+        }
+
+        // Sirf meri screen (saare tabs) se hatao
+        io.to(userId).emit("message-hidden", { id: String(message._id) });
+        reply({ ok: true });
+      } catch (err) {
+        console.error("delete-for-me error:", err.message);
+        reply({ error: "Server error" });
+      }
+    });
+
+    // ---------- DELETE MSG: Delete for everyone ----------
+    // Sirf bhejne wala, sirf apne message ke liye
+    socket.on("delete-for-everyone", async (data, cb) => {
+      const reply = typeof cb === "function" ? cb : () => {};
+      try {
+        if (!data || typeof data.messageId !== "string" || !mongoose.isValidObjectId(data.messageId)) {
+          return reply({ error: "Invalid message" });
+        }
+        const message = await Message.findById(data.messageId);
+        if (!message) return reply({ error: "Message not found" });
+
+        const senderId = String(message.from);
+        const receiverId = String(message.to);
+        if (userId !== senderId) return reply({ error: "Only the sender can delete for everyone" });
+
+        const wasUnread = message.status !== "read";
+        await Message.deleteOne({ _id: message._id });
+
+        const payload = { id: String(message._id), from: senderId, wasUnread };
+        io.to(senderId).emit("message-deleted", payload);
+        io.to(receiverId).emit("message-deleted", payload);
+        reply({ ok: true });
+      } catch (err) {
+        console.error("delete-for-everyone error:", err.message);
+        reply({ error: "Server error" });
+      }
+    });
     // ---------- Typing indicators ----------
     socket.on("typing", (data) => {
       try {

@@ -9,19 +9,20 @@
 //   5. [BATCH A] Chat-list menu: pin, archive, mute, mark unread, clear, delete
 //   6. [BATCH A] Reactions under message bubbles
 //   7. [BATCH A] Search inside the open chat (in the browser only)
+//   8. [DELETE MSG] Delete a message for me / for everyone
 
-import { apiGet, apiPost, apiPatch, apiDelete } from "./api.js"; // BATCH A: apiPatch, apiDelete added
+import { apiGet, apiPost, apiPatch, apiDelete } from "./api.js";
 import { encryptMessage, decryptMessage } from "./crypto.js";
 import { connectSocket, disconnectSocket } from "./socket.js";
 
 // ---------- Small settings ----------
 const DECRYPT_ERROR_TEXT = "Message decrypt nahi ho paya";
-const SEARCH_DEBOUNCE_MS = 300;   // wait this long after typing before searching
-const TYPING_THROTTLE_MS = 1000;  // send "typing" at most once per second
-const TYPING_STOP_MS = 1500;      // no typing for 1.5s => send "stop-typing"
-const TYPING_EXPIRE_MS = 5000;    // safety: hide "typing..." if we never get "stop-typing"
+const SEARCH_DEBOUNCE_MS = 300;
+const TYPING_THROTTLE_MS = 1000;
+const TYPING_STOP_MS = 1500;
+const TYPING_EXPIRE_MS = 5000;
 
-// BATCH A: the 6 quick emojis shown when you click the 😀 button
+// The 6 quick emojis shown when you click the 😀 button
 const QUICK_EMOJIS = ["\u{1F44D}", "\u2764\uFE0F", "\u{1F602}", "\u{1F62E}", "\u{1F622}", "\u{1F64F}"];
 
 // Used so a status never goes backwards (read -> sent is not allowed)
@@ -48,7 +49,7 @@ const messageInput = $("messageInput");
 const sendBtn = $("sendBtn");
 const toast = $("toast");
 
-// BATCH A: search-in-chat elements
+// Search-in-chat elements
 const chatSearchBtn = $("chatSearchBtn");
 const chatSearchBar = $("chatSearchBar");
 const chatSearchInput = $("chatSearchInput");
@@ -57,27 +58,28 @@ const chatSearchPrev = $("chatSearchPrev");
 const chatSearchNext = $("chatSearchNext");
 const chatSearchClose = $("chatSearchClose");
 
-// ---------- App data (our "memory" while the page is open) ----------
-let me = { id: "", username: "" };      // the logged-in user
+// ---------- App data ----------
+let me = { id: "", username: "" };
 let socket = null;
 
 // userId -> { user:{id,username}, lastAt, unread, pinned, archived, mutedUntil, markedUnread }
 const conversations = new Map();
-let onlineUsers = new Set();            // ids of users who are online right now
-const lastSeenMap = new Map();          // userId -> last seen time (ISO string)
-const typingUsers = new Set();          // ids of users who are typing to us right now
-const typingTimers = new Map();         // userId -> timer that hides "typing..."
-const userInfoCache = new Map();        // userId -> Promise of {id, username, publicKey, lastSeen}
+let onlineUsers = new Set();
+const lastSeenMap = new Map();
+const typingUsers = new Set();
+const typingTimers = new Map();
+const userInfoCache = new Map();
 
-let currentChat = null;                 // { id, username } of the open chat, or null
-let openCounter = 0;                    // bumps on every open/close, to ignore old async results
-let chatReady = false;                  // true when history of the open chat is on screen
-let pendingIncoming = [];               // messages that arrived while history was loading
+let currentChat = null;
+let openCounter = 0;
+let chatReady = false;
+let pendingIncoming = [];
 
 // messageId -> { id, mine, row, wrap, textEl, timeEl, tickEl, status, reactions, reactionsEl }
 const messageEls = new Map();
-const earlyStatus = new Map();          // status-update that arrived before we knew the message
-let lastDateKey = "";                   // used to know when to add a new date separator
+const deletedIds = new Set();           // DELETE MSG: ids of deleted messages
+const earlyStatus = new Map();
+let lastDateKey = "";
 
 // typing (what WE send to others)
 let typingTarget = null;
@@ -88,18 +90,18 @@ let stopTypingTimer = null;
 let searchTimer = null;
 let searchSeq = 0;
 
-// BATCH A: chat-list menu state
-let showArchived = false;               // is the "Archived" section open?
-let openMenu = null;                    // { el, id } of the dropdown that is open, or null
+// chat-list menu state (also used by the message menu)
+let showArchived = false;
+let openMenu = null;                    // { el, id }
 
-// BATCH A: reaction picker state
-let openPicker = null;                  // { el, wrap } of the emoji row that is open, or null
+// reaction picker state
+let openPicker = null;                  // { el, wrap }
 
-// BATCH A: search-in-chat state
-let chatSearchOpen = false;             // is the search bar open?
-let chatMatches = [];                   // all <mark> elements found, oldest first
-let chatMatchIndex = -1;                // which match is the "current" one
-let chatSearchRefreshTimer = null;      // used when new messages arrive during a search
+// search-in-chat state
+let chatSearchOpen = false;
+let chatMatches = [];
+let chatMatchIndex = -1;
+let chatSearchRefreshTimer = null;
 
 // ---------- Tiny helpers ----------
 
@@ -118,7 +120,7 @@ function showToast(message) {
   showToast.timer = setTimeout(() => toast.classList.remove("show"), 3500);
 }
 
-// BATCH A: a message that is still waiting for the server has a temporary id
+// A message that is still waiting for the server has a temporary id
 function isTempId(id) {
   return typeof id === "string" && id.startsWith("temp-");
 }
@@ -134,13 +136,11 @@ function isYesterday(date) {
   return sameDay(date, y);
 }
 
-// "10:35 AM"
 function formatTime(iso) {
   if (!iso) return "";
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-// Date separator inside a chat: "Today", "Yesterday" or "12 March 2026"
 function dateLabel(iso) {
   const d = new Date(iso);
   if (sameDay(d, new Date())) return "Today";
@@ -148,7 +148,6 @@ function dateLabel(iso) {
   return d.toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" });
 }
 
-// Time shown in the chat list
 function formatListTime(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -157,7 +156,6 @@ function formatListTime(iso) {
   return d.toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "2-digit" });
 }
 
-// "last seen today at 10:35 AM"
 function formatLastSeen(iso) {
   const d = new Date(iso);
   const time = formatTime(iso);
@@ -171,7 +169,7 @@ function timeValue(iso) {
   return iso ? new Date(iso).getTime() : 0;
 }
 
-// ---------- Avatar (round circle with first letter) ----------
+// ---------- Avatar ----------
 function makeAvatar(username, online) {
   const wrap = el("div", "avatar-wrap");
   wrap.appendChild(el("div", "avatar", (username || "?").charAt(0).toUpperCase()));
@@ -179,15 +177,13 @@ function makeAvatar(username, online) {
   return wrap;
 }
 
-// ---------- Getting info about another user ----------
-// We cache the result so we only ask the server once per user (it includes their public key).
+// ---------- Getting info about another user (cached) ----------
 function getUserInfo(userId) {
   if (!userInfoCache.has(userId)) {
     const promise = apiGet("/api/users/" + userId).then((user) => {
       if (user.lastSeen && !lastSeenMap.has(userId)) lastSeenMap.set(userId, user.lastSeen);
       return user;
     });
-    // If it fails, forget it so we can try again next time
     promise.catch(() => userInfoCache.delete(userId));
     userInfoCache.set(userId, promise);
   }
@@ -207,12 +203,10 @@ async function safeDecrypt(msg, theirPublicJwk) {
 // SIDEBAR: conversation list
 // =====================================================
 
-// BATCH A: is this chat muted right now? (mutedUntil is a date in the future)
 function isMuted(conv) {
   return !!conv.mutedUntil && new Date(conv.mutedUntil) > new Date();
 }
 
-// BATCH A: pinned chats first, then the newest chat first
 function sortConversations(list) {
   return list.sort((a, b) => {
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
@@ -220,7 +214,6 @@ function sortConversations(list) {
   });
 }
 
-// BATCH A: the "Archived (N)" row at the top of the list
 function buildArchivedRow(count) {
   const item = el("li", "user-item archived-row");
   item.tabIndex = 0;
@@ -238,7 +231,6 @@ function buildArchivedRow(count) {
   return item;
 }
 
-// Builds ONE row of the chat list
 function buildConversationRow(conv) {
   const id = conv.user.id;
   const muted = isMuted(conv);
@@ -250,17 +242,15 @@ function buildConversationRow(conv) {
 
   const body = el("div", "user-body");
 
-  // Top row: name (+ pin / mute icons) and time
   const top = el("div", "user-row");
   const nameGroup = el("div", "name-group");
   nameGroup.appendChild(el("span", "user-name", conv.user.username));
-  if (conv.pinned) nameGroup.appendChild(el("span", "conv-icon", "\u{1F4CC}")); // BATCH A: pin
-  if (muted) nameGroup.appendChild(el("span", "conv-icon", "\u{1F515}"));       // BATCH A: muted
+  if (conv.pinned) nameGroup.appendChild(el("span", "conv-icon", "\u{1F4CC}"));
+  if (muted) nameGroup.appendChild(el("span", "conv-icon", "\u{1F515}"));
   top.appendChild(nameGroup);
   top.appendChild(el("span", "conv-time" + (conv.unread > 0 ? " unread" : ""), formatListTime(conv.lastAt)));
   body.appendChild(top);
 
-  // Bottom row: small text + unread badge
   const bottom = el("div", "user-row");
   if (typingUsers.has(id)) {
     bottom.appendChild(el("span", "conv-preview typing", "typing..."));
@@ -268,43 +258,37 @@ function buildConversationRow(conv) {
     bottom.appendChild(el("span", "conv-preview", "\u{1F512} Encrypted message"));
   }
   if (conv.unread > 0) {
-    // BATCH A: grey badge when the chat is muted
     bottom.appendChild(
       el("span", "badge" + (muted ? " muted" : ""), conv.unread > 99 ? "99+" : String(conv.unread))
     );
   } else if (conv.markedUnread) {
-    // BATCH A: "marked as unread" shows a small dot
     bottom.appendChild(el("span", "unread-dot"));
   }
   body.appendChild(bottom);
 
   item.appendChild(body);
 
-  // BATCH A: the "⋮" button that opens the menu
   const menuBtn = el("button", "menu-btn", "\u22EE");
   menuBtn.type = "button";
   menuBtn.setAttribute("aria-label", "Chat options");
   menuBtn.addEventListener("click", (e) => {
-    e.stopPropagation(); // do not open the chat
+    e.stopPropagation();
     toggleMenu(id, menuBtn);
   });
   item.appendChild(menuBtn);
 
   item.addEventListener("click", () => openChat(conv.user));
   item.addEventListener("keydown", (e) => {
-    // only when the row itself is focused (not the ⋮ button)
     if (e.key === "Enter" && e.target === item) openChat(conv.user);
   });
   return item;
 }
 
 function renderConversations() {
-  // BATCH A: split into normal chats and archived chats
   const all = Array.from(conversations.values());
   const mainList = sortConversations(all.filter((c) => !c.archived));
   const archivedList = sortConversations(all.filter((c) => c.archived));
 
-  // Nothing archived anymore -> close the archived section
   if (archivedList.length === 0) showArchived = false;
 
   conversationList.replaceChildren();
@@ -314,7 +298,6 @@ function renderConversations() {
     return;
   }
 
-  // BATCH A: "Archived (N)" row at the very top
   if (archivedList.length > 0) {
     conversationList.appendChild(buildArchivedRow(archivedList.length));
     if (showArchived) {
@@ -322,7 +305,6 @@ function renderConversations() {
     }
   }
 
-  // Archived chats are NOT in the main list
   for (const conv of mainList) conversationList.appendChild(buildConversationRow(conv));
 }
 
@@ -334,10 +316,10 @@ function touchConversation(user, lastAt, addUnread) {
       user: { id: user.id, username: user.username },
       lastAt: null,
       unread: 0,
-      pinned: false,        // BATCH A
-      archived: false,      // BATCH A
-      mutedUntil: null,     // BATCH A
-      markedUnread: false,  // BATCH A
+      pinned: false,
+      archived: false,
+      mutedUntil: null,
+      markedUnread: false,
     };
     conversations.set(user.id, conv);
   }
@@ -354,10 +336,10 @@ async function loadConversations() {
         user: { id: c.user.id, username: c.user.username },
         lastAt: c.lastMessage ? c.lastMessage.createdAt : null,
         unread: c.unread || 0,
-        pinned: !!c.pinned,               // BATCH A
-        archived: !!c.archived,           // BATCH A
-        mutedUntil: c.mutedUntil || null, // BATCH A
-        markedUnread: !!c.markedUnread,   // BATCH A
+        pinned: !!c.pinned,
+        archived: !!c.archived,
+        mutedUntil: c.mutedUntil || null,
+        markedUnread: !!c.markedUnread,
       });
     }
   } catch (err) {
@@ -367,7 +349,7 @@ async function loadConversations() {
 }
 
 // =====================================================
-// BATCH A: chat-list menu (⋮) and its actions
+// Chat-list menu (⋮) and its actions
 // =====================================================
 
 function closeMenu() {
@@ -377,7 +359,7 @@ function closeMenu() {
   }
 }
 
-// One clickable line inside the dropdown
+// One clickable line inside a dropdown
 function menuItem(label, onClick, danger) {
   const btn = el("button", "menu-item" + (danger ? " danger" : ""), label);
   btn.type = "button";
@@ -388,7 +370,20 @@ function menuItem(label, onClick, danger) {
   return btn;
 }
 
-// Opens the dropdown for one chat (or closes it if it is already open)
+// Puts a dropdown on <body> under a button, inside the screen
+function placeMenu(menu, anchorBtn) {
+  document.body.appendChild(menu);
+  const rect = anchorBtn.getBoundingClientRect();
+  let left = rect.right - menu.offsetWidth;
+  let top = rect.bottom + 4;
+  if (left < 8) left = 8;
+  if (top + menu.offsetHeight > window.innerHeight - 8) {
+    top = Math.max(8, rect.top - menu.offsetHeight - 4);
+  }
+  menu.style.left = left + "px";
+  menu.style.top = top + "px";
+}
+
 function toggleMenu(id, anchorBtn) {
   const wasOpenForThis = openMenu && openMenu.id === id;
   closeMenu();
@@ -421,24 +416,10 @@ function toggleMenu(id, anchorBtn) {
   menu.appendChild(menuItem("Clear chat", () => clearChat(id), true));
   menu.appendChild(menuItem("Delete chat", () => deleteChat(id), true));
 
-  // The menu lives on <body> (not inside the list) so the scrolling list cannot cut it off.
-  document.body.appendChild(menu);
-
-  // Place it under the button, and keep it inside the screen
-  const rect = anchorBtn.getBoundingClientRect();
-  let left = rect.right - menu.offsetWidth;
-  let top = rect.bottom + 4;
-  if (left < 8) left = 8;
-  if (top + menu.offsetHeight > window.innerHeight - 8) {
-    top = Math.max(8, rect.top - menu.offsetHeight - 4);
-  }
-  menu.style.left = left + "px";
-  menu.style.top = top + "px";
-
+  placeMenu(menu, anchorBtn);
   openMenu = { el: menu, id };
 }
 
-// pin / archive / mute / mark unread: send the change, then use the server's answer
 async function patchChat(id, changes) {
   closeMenu();
   try {
@@ -452,11 +433,10 @@ async function patchChat(id, changes) {
     }
     renderConversations();
   } catch (err) {
-    alert(err.message); // for example: "You can pin up to 3 chats only"
+    alert(err.message);
   }
 }
 
-// Clear chat: removes the old messages (only for me)
 async function clearChat(id) {
   closeMenu();
   if (!window.confirm("Clear all messages in this chat?")) return;
@@ -468,9 +448,8 @@ async function clearChat(id) {
       conv.markedUnread = false;
       conv.lastAt = new Date().toISOString();
     }
-    // If this chat is open, empty the messages on screen
     if (currentChat && currentChat.id === id) {
-      closeChatSearch(); // BATCH A: nothing left to search in
+      closeChatSearch();
       resetMessages();
     }
     renderConversations();
@@ -479,7 +458,6 @@ async function clearChat(id) {
   }
 }
 
-// Delete chat: removes the chat from my list
 async function deleteChat(id) {
   closeMenu();
   if (!window.confirm("Delete this chat?")) return;
@@ -487,7 +465,7 @@ async function deleteChat(id) {
     await apiDelete("/api/chats/" + id);
     conversations.delete(id);
     if (currentChat && currentChat.id === id) {
-      closeChat(); // closes the open chat (and re-draws the list)
+      closeChat();
     } else {
       renderConversations();
     }
@@ -501,7 +479,7 @@ async function deleteChat(id) {
 // =====================================================
 
 function clearSearch() {
-  searchSeq++;                       // makes any slow, old search result get ignored
+  searchSeq++;
   clearTimeout(searchTimer);
   searchResults.replaceChildren();
   searchResults.classList.add("hidden");
@@ -545,7 +523,7 @@ async function runSearch(query) {
   const mySeq = ++searchSeq;
   try {
     const users = await apiGet("/api/users/search?q=" + encodeURIComponent(query));
-    if (mySeq !== searchSeq) return;   // a newer search started, ignore this one
+    if (mySeq !== searchSeq) return;
     renderSearchResults(users);
   } catch (err) {
     if (mySeq !== searchSeq) return;
@@ -562,12 +540,11 @@ function onSearchInput() {
     clearSearch();
     return;
   }
-  // "Debounce": only search after the user stops typing for a moment
   searchTimer = setTimeout(() => runSearch(query), SEARCH_DEBOUNCE_MS);
 }
 
 // =====================================================
-// CHAT HEADER (name + online / last seen / typing)
+// CHAT HEADER
 // =====================================================
 
 function statusText(userId) {
@@ -592,12 +569,11 @@ function updateHeader() {
 // =====================================================
 
 function resetMessages() {
-  closePicker(); // BATCH A: the emoji row belongs to a message that is going away
+  closePicker();
   messagesEl.replaceChildren();
   messageEls.clear();
   earlyStatus.clear();
   lastDateKey = "";
-  // BATCH A: all search highlights were on those messages, so forget them
   chatMatches = [];
   chatMatchIndex = -1;
   updateSearchCount();
@@ -611,8 +587,6 @@ function scrollToBottom() {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-// Draws the tick(s) of one of my messages
-//   sent = one tick, delivered = two ticks, read = two blue ticks
 function paintTick(rec) {
   if (!rec.tickEl) return;
   rec.tickEl.textContent = rec.status === "sent" ? "\u2713" : "\u2713\u2713";
@@ -620,21 +594,18 @@ function paintTick(rec) {
 }
 
 // =====================================================
-// BATCH A: reactions
+// Reactions
 // =====================================================
 
-// Which emoji did I use on this message? ("" if none)
 function myReactionOf(rec) {
   const mine = rec.reactions.find((r) => String(r.user) === me.id);
   return mine ? mine.emoji : "";
 }
 
-// Draws the little chips under a bubble, e.g. "👍 2" and "❤️ 1"
 function renderReactions(rec) {
   rec.reactionsEl.replaceChildren();
 
-  // Group by emoji and count (a Map keeps the order of first use)
-  const groups = new Map(); // emoji -> { count, mine }
+  const groups = new Map();
   for (const r of rec.reactions) {
     if (!r.emoji) continue;
     const g = groups.get(r.emoji) || { count: 0, mine: false };
@@ -661,18 +632,15 @@ function closePicker() {
   }
 }
 
-// Sends my reaction to the server. The screen updates when "reaction-update" comes back.
 function sendReaction(rec, emoji) {
   if (isTempId(rec.id)) {
     showToast("Please wait, the message is still sending.");
     return;
   }
-  // Clicking the emoji I already used removes my reaction
   const newEmoji = myReactionOf(rec) === emoji ? "" : emoji;
   socket.emit("react", { messageId: rec.id, emoji: newEmoji });
 }
 
-// Opens the row of 6 quick emojis above a bubble (or closes it if already open)
 function togglePicker(rec) {
   const wasOpenForThis = openPicker && openPicker.wrap === rec.wrap;
   closePicker();
@@ -696,20 +664,18 @@ function togglePicker(rec) {
     picker.appendChild(btn);
   }
   rec.wrap.appendChild(picker);
-  rec.wrap.classList.add("show-actions"); // keeps the 😀 button visible while the row is open
+  rec.wrap.classList.add("show-actions");
   openPicker = { el: picker, wrap: rec.wrap };
 }
 
-// The server says the reactions of a message changed
 function handleReactionUpdate({ id, reactions }) {
   const rec = messageEls.get(id);
-  if (!rec) return; // that message is not on screen
+  if (!rec) return;
   const wasNearBottom = isNearBottom();
   rec.reactions = Array.isArray(reactions) ? reactions : [];
   renderReactions(rec);
   if (wasNearBottom) scrollToBottom();
 
-  // If the emoji row is open for this message, refresh the "chosen" highlight by closing it
   if (openPicker && openPicker.wrap === rec.wrap) closePicker();
 }
 
@@ -725,8 +691,8 @@ function addMessage({ id, mine, text, createdAt, status, failed, reactions }) {
   }
 
   const row = el("div", "msg-row " + (mine ? "mine" : "theirs"));
+  row.dataset.dateKey = key; // DELETE MSG: used to fix the date separator after a delete
 
-  // BATCH A: the wrapper holds the bubble, the 😀 button and the reactions
   const wrap = el("div", "msg-wrap");
   const bubble = el("div", "bubble" + (failed ? " failed" : ""));
   const textEl = el("div", "msg-text", text);
@@ -744,7 +710,6 @@ function addMessage({ id, mine, text, createdAt, status, failed, reactions }) {
   bubble.appendChild(meta);
   wrap.appendChild(bubble);
 
-  // BATCH A: reactions shown under the bubble
   const reactionsEl = el("div", "reactions hidden");
   wrap.appendChild(reactionsEl);
 
@@ -767,7 +732,7 @@ function addMessage({ id, mine, text, createdAt, status, failed, reactions }) {
   renderReactions(rec);
   messageEls.set(id, rec);
 
-  // BATCH A: the small 😀 button (shows on hover, or after a tap on phones)
+  // The small 😀 button (shows on hover, or after a tap on phones)
   const reactBtn = el("button", "react-btn", "\u{1F600}");
   reactBtn.type = "button";
   reactBtn.setAttribute("aria-label", "React to message");
@@ -777,7 +742,17 @@ function addMessage({ id, mine, text, createdAt, status, failed, reactions }) {
   });
   wrap.appendChild(reactBtn);
 
-  // BATCH A: on touch screens (no hover) a tap on the bubble shows the 😀 button
+  // DELETE MSG: the small ⋮ button
+  const msgMenuBtn = el("button", "msg-menu-btn", "\u22EE");
+  msgMenuBtn.type = "button";
+  msgMenuBtn.setAttribute("aria-label", "Message options");
+  msgMenuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleMessageMenu(rec, msgMenuBtn);
+  });
+  wrap.appendChild(msgMenuBtn);
+
+  // On touch screens a tap on the bubble shows the buttons
   bubble.addEventListener("click", () => {
     if (!window.matchMedia("(hover: none)").matches) return;
     const wasShown = wrap.classList.contains("show-actions");
@@ -788,17 +763,15 @@ function addMessage({ id, mine, text, createdAt, status, failed, reactions }) {
     if (!wasShown) wrap.classList.add("show-actions");
   });
 
-  // BATCH A: a new message appeared while the search bar is open -> refresh matches
   if (chatSearchOpen && chatSearchInput.value.trim()) scheduleSearchRefresh();
 
   return rec;
 }
 
-// Changes the ticks of a message (only moves forward: sent -> delivered -> read)
+// Changes the ticks of a message (only moves forward)
 function applyStatus(id, status) {
   const rec = messageEls.get(id);
   if (!rec) {
-    // We may not know this message yet (ack not processed). Remember the best status.
     const old = earlyStatus.get(id);
     if (!old || STATUS_RANK[status] > STATUS_RANK[old]) earlyStatus.set(id, status);
     return;
@@ -811,12 +784,9 @@ function applyStatus(id, status) {
 }
 
 // =====================================================
-// BATCH A: search inside the open chat
+// Search inside the open chat
 // =====================================================
-// Everything here runs in the browser over messages that are already decrypted.
-// Matches are wrapped in <mark> elements built with DOM nodes (no innerHTML).
 
-// Shows "2 of 7", "No results" or nothing
 function updateSearchCount() {
   const hasQuery = chatSearchInput.value.trim() !== "";
   if (!hasQuery) {
@@ -830,16 +800,14 @@ function updateSearchCount() {
   chatSearchNext.disabled = chatMatches.length === 0;
 }
 
-// Removes every <mark> and puts the plain text back
 function clearHighlights() {
   const parents = new Set();
   for (const mark of messagesEl.querySelectorAll(".msg-text mark")) parents.add(mark.parentNode);
-  for (const p of parents) p.textContent = p.textContent; // plain text again, no marks
+  for (const p of parents) p.textContent = p.textContent;
   chatMatches = [];
   chatMatchIndex = -1;
 }
 
-// Wraps every match inside ONE message text. Returns the new <mark> elements.
 function highlightInElement(textEl, lowerQuery) {
   const text = textEl.textContent;
   const lowerText = text.toLowerCase();
@@ -863,7 +831,6 @@ function highlightInElement(textEl, lowerQuery) {
   return marks;
 }
 
-// Makes one match the "current" one (orange) and scrolls to it
 function setActiveMatch(index, scroll) {
   if (chatMatches[chatMatchIndex]) chatMatches[chatMatchIndex].classList.remove("active");
   chatMatchIndex = index;
@@ -875,7 +842,6 @@ function setActiveMatch(index, scroll) {
   updateSearchCount();
 }
 
-// Finds all matches. keepPosition = true keeps the current match (used when new messages arrive)
 function runChatSearch(keepPosition) {
   const oldIndex = chatMatchIndex;
   clearHighlights();
@@ -886,7 +852,6 @@ function runChatSearch(keepPosition) {
     return;
   }
 
-  // Messages that could not be decrypted (.failed) are skipped
   for (const textEl of messagesEl.querySelectorAll(".bubble:not(.failed) .msg-text")) {
     for (const mark of highlightInElement(textEl, query)) chatMatches.push(mark);
   }
@@ -896,12 +861,10 @@ function runChatSearch(keepPosition) {
     return;
   }
 
-  // Start at the newest match (like WhatsApp). When refreshing, stay where we were.
   const index = keepPosition && oldIndex >= 0 ? Math.min(oldIndex, chatMatches.length - 1) : chatMatches.length - 1;
   setActiveMatch(index, !keepPosition);
 }
 
-// Waits a moment so many new messages only cause one refresh
 function scheduleSearchRefresh() {
   clearTimeout(chatSearchRefreshTimer);
   chatSearchRefreshTimer = setTimeout(() => {
@@ -909,7 +872,6 @@ function scheduleSearchRefresh() {
   }, 50);
 }
 
-// direction -1 = older match (up arrow), +1 = newer match (down arrow)
 function stepMatch(direction) {
   if (chatMatches.length === 0) return;
   const next = (chatMatchIndex + direction + chatMatches.length) % chatMatches.length;
@@ -926,7 +888,6 @@ function openChatSearch() {
   else updateSearchCount();
 }
 
-// Closes the bar, empties it and removes all highlights
 function closeChatSearch() {
   clearTimeout(chatSearchRefreshTimer);
   chatSearchOpen = false;
@@ -937,6 +898,86 @@ function closeChatSearch() {
 }
 
 // =====================================================
+// DELETE MSG: delete for me / delete for everyone
+// =====================================================
+
+function toggleMessageMenu(rec, anchorBtn) {
+  const menuId = "msg:" + rec.id;
+  const wasOpen = openMenu && openMenu.id === menuId;
+  closeMenu();
+  closePicker();
+  if (wasOpen) return;
+
+  if (isTempId(rec.id)) {
+    showToast("Please wait, the message is still sending.");
+    return;
+  }
+
+  const menu = el("div", "chat-menu");
+  menu.appendChild(menuItem("Delete for me", () => deleteMessageForMe(rec), true));
+  if (rec.mine) {
+    menu.appendChild(menuItem("Delete for everyone", () => deleteMessageForEveryone(rec), true));
+  }
+  placeMenu(menu, anchorBtn);
+  openMenu = { el: menu, id: menuId };
+}
+
+function deleteMessageForMe(rec) {
+  closeMenu();
+  socket.emit("delete-for-me", { messageId: rec.id }, (res) => {
+    if (res && res.error) showToast(res.error);
+  });
+}
+
+function deleteMessageForEveryone(rec) {
+  closeMenu();
+  if (!window.confirm("Delete this message for everyone?")) return;
+  socket.emit("delete-for-everyone", { messageId: rec.id }, (res) => {
+    if (res && res.error) showToast(res.error);
+  });
+}
+
+// Removes a message from the screen (and an empty date separator)
+function removeMessageFromScreen(id) {
+  const rec = messageEls.get(id);
+  if (!rec) return;
+  if (openPicker && openPicker.wrap === rec.wrap) closePicker();
+
+  const prev = rec.row.previousElementSibling;
+  const next = rec.row.nextElementSibling;
+  rec.row.remove();
+  messageEls.delete(id);
+
+  if (prev && prev.classList.contains("date-sep") && (!next || next.classList.contains("date-sep"))) {
+    prev.remove();
+  }
+
+  const rows = messagesEl.querySelectorAll(".msg-row");
+  lastDateKey = rows.length ? rows[rows.length - 1].dataset.dateKey || "" : "";
+
+  if (chatSearchOpen && chatSearchInput.value.trim()) scheduleSearchRefresh();
+}
+
+// Server: message deleted for everyone
+function handleMessageDeleted({ id, from, wasUnread }) {
+  deletedIds.add(id);
+  removeMessageFromScreen(id);
+
+  // If it was an unread message sent to me, lower the badge by one
+  if (from !== me.id && wasUnread) {
+    const conv = conversations.get(from);
+    if (conv && conv.unread > 0) conv.unread--;
+    renderConversations();
+  }
+}
+
+// Server: message hidden only for me
+function handleMessageHidden({ id }) {
+  deletedIds.add(id);
+  removeMessageFromScreen(id);
+}
+
+// =====================================================
 // OPEN / CLOSE a chat
 // =====================================================
 
@@ -944,27 +985,24 @@ async function openChat(user) {
   clearSearch();
   searchInput.value = "";
 
-  // Same chat already open? Just show it (useful on mobile).
   if (currentChat && currentChat.id === user.id) {
     app.classList.add("show-chat");
     return;
   }
 
   stopTypingNow();
-  closeChatSearch(); // BATCH A: a search belongs to one chat only
+  closeChatSearch();
   const thisOpen = ++openCounter;
   currentChat = { id: user.id, username: user.username };
   chatReady = false;
   pendingIncoming = [];
 
-  // Clear the unread badge right away
   const conv = conversations.get(user.id);
   if (conv) {
     conv.unread = 0;
-    conv.markedUnread = false; // BATCH A: opening a chat removes "marked as unread" (server does it on mark-read)
+    conv.markedUnread = false;
   }
 
-  // Show the chat window
   placeholder.classList.add("hidden");
   chatWindow.classList.remove("hidden");
   app.classList.add("show-chat");
@@ -975,7 +1013,6 @@ async function openChat(user) {
   updateHeader();
   renderConversations();
 
-  // 1) get their public key  2) get the old (encrypted) messages
   let info;
   let history;
   try {
@@ -987,14 +1024,14 @@ async function openChat(user) {
     messagesEl.appendChild(el("div", "loading-note", "Could not load chat: " + err.message));
     return;
   }
-  if (thisOpen !== openCounter) return;   // user already opened another chat
+  if (thisOpen !== openCounter) return;
 
-  // 3) decrypt every message here in the browser
   const texts = await Promise.all(history.map((m) => safeDecrypt(m, info.publicKey)));
   if (thisOpen !== openCounter) return;
 
   resetMessages();
   history.forEach((m, i) => {
+    if (deletedIds.has(m.id)) return; // DELETE MSG: skip deleted messages
     const text = texts[i];
     addMessage({
       id: m.id,
@@ -1003,7 +1040,7 @@ async function openChat(user) {
       failed: text === null,
       createdAt: m.createdAt,
       status: m.status,
-      reactions: m.reactions || [], // BATCH A: reactions come with the history
+      reactions: m.reactions || [],
     });
   });
 
@@ -1011,22 +1048,19 @@ async function openChat(user) {
   updateHeader();
   scrollToBottom();
 
-  // Messages that arrived while we were loading
   const waiting = pendingIncoming;
   pendingIncoming = [];
   for (const m of waiting) await handleReceive(m);
   if (thisOpen !== openCounter) return;
 
-  // Tell the server we read everything from this user
   socket.emit("mark-read", { from: user.id });
 
   if (window.matchMedia("(min-width: 701px)").matches) messageInput.focus();
 }
 
-// Used by the Back button on small screens
 function closeChat() {
   stopTypingNow();
-  closeChatSearch(); // BATCH A
+  closeChatSearch();
   openCounter++;
   currentChat = null;
   chatReady = false;
@@ -1046,24 +1080,22 @@ async function sendMessage() {
   const text = messageInput.value.trim();
   if (!text || !currentChat) return;
 
-  const chat = currentChat;   // remember which chat this message is for
+  const chat = currentChat;
   messageInput.value = "";
   autoGrowInput();
   stopTypingNow();
 
-  // Encrypt in the browser. The server only ever sees the encrypted text.
   let encrypted;
   try {
     const info = await getUserInfo(chat.id);
     encrypted = await encryptMessage(text, info.publicKey);
   } catch (err) {
-    messageInput.value = text;   // give the text back so it is not lost
+    messageInput.value = text;
     autoGrowInput();
     showToast("Could not encrypt the message: " + err.message);
     return;
   }
 
-  // Show the message instantly with a single tick, using a temporary id
   const tempId = "temp-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
   const createdAt = new Date().toISOString();
 
@@ -1079,20 +1111,17 @@ async function sendMessage() {
     tempId,
   });
 
-  // Move this chat to the top of the list (creates it if it is a new chat)
   touchConversation(chat, createdAt, 0);
 }
 
-// The server saved our message: swap the temporary id for the real id
 function handleSentAck({ tempId, id, createdAt }) {
   const rec = messageEls.get(tempId);
-  if (!rec) return;   // the chat was closed in the meantime
+  if (!rec) return;
   messageEls.delete(tempId);
-  rec.id = id;        // from now on this message can be reacted to
+  rec.id = id;
   messageEls.set(id, rec);
   if (createdAt) rec.timeEl.textContent = formatTime(createdAt);
 
-  // A status-update may have arrived before the ack
   const early = earlyStatus.get(id);
   if (early) {
     earlyStatus.delete(id);
@@ -1105,24 +1134,23 @@ function handleSentAck({ tempId, id, createdAt }) {
 // =====================================================
 
 async function handleReceive(msg) {
-  const otherId = msg.from;
-  setTyping(otherId, false);   // they sent a message, so they stopped typing
+  if (deletedIds.has(msg.id)) return; // DELETE MSG: already deleted
 
-  // BATCH A: a new message brings an archived chat back (same rule as the server:
-  // muted chats stay archived)
+  const otherId = msg.from;
+  setTyping(otherId, false);
+
   const known = conversations.get(otherId);
   if (known && known.archived && !isMuted(known)) known.archived = false;
 
   const viewing = currentChat && currentChat.id === otherId;
 
   if (viewing && !chatReady) {
-    // History is still loading. Keep the message and show it after loading.
     pendingIncoming.push(msg);
     return;
   }
 
   if (viewing) {
-    if (messageEls.has(msg.id)) return;   // already on screen, skip duplicates
+    if (messageEls.has(msg.id)) return;
 
     let text = null;
     try {
@@ -1132,7 +1160,8 @@ async function handleReceive(msg) {
       text = null;
     }
 
-    // Is the same chat still open after waiting?
+    if (deletedIds.has(msg.id)) return; // deleted while we were decrypting
+
     if (currentChat && currentChat.id === otherId && chatReady) {
       if (messageEls.has(msg.id)) return;
       const wasNearBottom = isNearBottom();
@@ -1152,8 +1181,6 @@ async function handleReceive(msg) {
     }
   }
 
-  // Chat is not open: raise the unread badge and move it to the top.
-  // If this is a brand-new conversation we first need the user's name.
   try {
     const info = await getUserInfo(otherId);
     touchConversation({ id: otherId, username: info.username }, msg.createdAt, 1);
@@ -1166,7 +1193,6 @@ async function handleReceive(msg) {
 // TYPING indicator
 // =====================================================
 
-// Someone else started / stopped typing to us
 function setTyping(userId, isTyping) {
   clearTimeout(typingTimers.get(userId));
   if (isTyping) {
@@ -1180,7 +1206,6 @@ function setTyping(userId, isTyping) {
   renderConversations();
 }
 
-// We are typing: tell the other person (not more than once per second)
 function onMessageInput() {
   autoGrowInput();
   if (!currentChat) return;
@@ -1197,7 +1222,6 @@ function onMessageInput() {
     lastTypingEmit = now;
   }
 
-  // If there is no typing for 1.5 seconds, send "stop-typing"
   clearTimeout(stopTypingTimer);
   stopTypingTimer = setTimeout(stopTypingNow, TYPING_STOP_MS);
 }
@@ -1209,7 +1233,6 @@ function stopTypingNow() {
   lastTypingEmit = 0;
 }
 
-// Makes the text box taller when there are many lines
 function autoGrowInput() {
   messageInput.style.height = "auto";
   messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + "px";
@@ -1229,7 +1252,6 @@ function refreshPresenceUI() {
 // =====================================================
 
 function startApp() {
-  // Read who I am (saved by the login page)
   try {
     me = JSON.parse(sessionStorage.getItem("user")) || me;
   } catch {
@@ -1238,16 +1260,13 @@ function startApp() {
   myName.textContent = me.username || "";
   myAvatar.textContent = (me.username || "?").charAt(0).toUpperCase();
 
-  // Connect to the server for live updates
   socket = connectSocket();
 
-  // List of users who are online (sent once right after connecting)
   socket.on("online-users", (ids) => {
     onlineUsers = new Set(ids);
     refreshPresenceUI();
   });
 
-  // Someone came online or went offline
   socket.on("presence", ({ userId, online, lastSeen }) => {
     if (online) {
       onlineUsers.add(userId);
@@ -1264,14 +1283,14 @@ function startApp() {
   socket.on("status-update", ({ id, status }) => applyStatus(id, status));
   socket.on("typing", ({ from }) => setTyping(from, true));
   socket.on("stop-typing", ({ from }) => setTyping(from, false));
-  socket.on("reaction-update", handleReactionUpdate); // BATCH A
+  socket.on("reaction-update", handleReactionUpdate);
+  socket.on("message-deleted", handleMessageDeleted); // DELETE MSG
+  socket.on("message-hidden", handleMessageHidden);   // DELETE MSG
 
-  // Buttons and inputs
   searchInput.addEventListener("input", onSearchInput);
   sendBtn.addEventListener("click", sendMessage);
   messageInput.addEventListener("input", onMessageInput);
   messageInput.addEventListener("keydown", (e) => {
-    // Enter = send, Shift+Enter = new line
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
       e.preventDefault();
       sendMessage();
@@ -1284,17 +1303,15 @@ function startApp() {
     window.location.href = "index.html";
   });
 
-  // BATCH A: search-in-chat buttons and input
   chatSearchBtn.addEventListener("click", () => {
     if (chatSearchOpen) closeChatSearch();
     else openChatSearch();
   });
   chatSearchClose.addEventListener("click", closeChatSearch);
-  chatSearchPrev.addEventListener("click", () => stepMatch(-1)); // older
-  chatSearchNext.addEventListener("click", () => stepMatch(1));  // newer
+  chatSearchPrev.addEventListener("click", () => stepMatch(-1));
+  chatSearchNext.addEventListener("click", () => stepMatch(1));
   chatSearchInput.addEventListener("input", () => runChatSearch(false));
   chatSearchInput.addEventListener("keydown", (e) => {
-    // Enter = older match, Shift+Enter = newer match
     if (e.key === "Enter" && !e.isComposing) {
       e.preventDefault();
       stepMatch(e.shiftKey ? 1 : -1);
@@ -1302,8 +1319,7 @@ function startApp() {
   });
   updateSearchCount();
 
-  // BATCH A: close the ⋮ dropdown and the emoji row when clicking outside,
-  // pressing Escape, scrolling the list or resizing the window
+  // Close dropdowns / emoji row when clicking outside, pressing Escape, scrolling or resizing
   document.addEventListener("click", (e) => {
     if (openMenu && !openMenu.el.contains(e.target)) closeMenu();
     if (openPicker && !openPicker.el.contains(e.target)) closePicker();
@@ -1312,20 +1328,20 @@ function startApp() {
     if (e.key !== "Escape") return;
     closeMenu();
     if (openPicker) {
-      closePicker(); // first Esc closes the emoji row only
+      closePicker();
       return;
     }
-    if (chatSearchOpen) closeChatSearch(); // Esc closes the search bar and removes highlights
+    if (chatSearchOpen) closeChatSearch();
   });
   conversationList.addEventListener("scroll", closeMenu);
   messagesEl.addEventListener("scroll", closePicker);
+  messagesEl.addEventListener("scroll", closeMenu);   // DELETE MSG
   window.addEventListener("resize", closeMenu);
 
   loadConversations();
 }
 
 // Not logged in? Go to the login page. Otherwise start the app.
-// (This is at the bottom so everything above is ready before it runs.)
 if (!sessionStorage.getItem("token")) {
   window.location.replace("index.html");
 } else {
