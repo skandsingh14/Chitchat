@@ -1,15 +1,27 @@
 :root {
-  --wa-green: #00a884;
-  --wa-bubble-mine: #d9fdd3;
+  --wa-green: #e11d74;          /* accent */
+  --wa-green-hover: #be185d;    /* accent hover / darker */
+  --wa-bubble-mine: #fce7f3;
   --wa-bubble-theirs: #ffffff;
-  --wa-chat-bg: #efeae2;
-  --wa-panel: #f0f2f5;
-  --wa-border: #e9edef;
-  --wa-text: #111b21;
-  --wa-muted: #667781;
-  --wa-tick: #8696a0;
-  --wa-tick-read: #53bdeb;
-  --wa-badge: #25d366;
+  --wa-chat-bg: #fdf2f8;
+  --wa-panel: #fbcfe8;
+  --wa-border: #f5d0e3;
+  --wa-text: #500724;
+  --wa-muted: #9d6b82;
+  --wa-tick: #c08aa5;
+  --wa-tick-read: #e11d74;
+  --wa-badge: #e11d74;
+
+  /* extra helper colors (naye) */
+  --wa-white: #ffffff;
+  --wa-hover: #fdf2f8;          /* row / menu hover */
+  --wa-active: #fce7f3;         /* selected chat row */
+  --wa-press: #f8bcd9;          /* round button hover (panel pe dikhe) */
+  --wa-danger: #c0392b;         /* Delete / Clear / failed */
+  --wa-mark: #fde68a;           /* search match */
+  --wa-mark-active: #fb923c;    /* active search match */
+  --wa-react-mine-bg: #fce7f3;
+  --wa-react-mine-border: #f4a6cb;
 }
 
 /* Helper class used by the JavaScript to hide things */
@@ -25,7 +37,7 @@ html, body { height: 100%; }
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  background: #d1d7db;
+  background: var(--wa-panel);
   color: var(--wa-text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
@@ -36,8 +48,8 @@ html, body { height: 100%; }
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
-  background: #fff;
-  box-shadow: 0 1px 6px rgba(11, 20, 26, 0.2);
+  background: var(--wa-white);
+  box-shadow: 0 1px 6px rgba(80, 7, 36, 0.2);
 }
 
 /* ---------- Sidebar (left) ---------- */
@@ -47,7 +59,7 @@ html, body { height: 100%; }
   max-width: 38%;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: var(--wa-white);
   border-right: 1px solid var(--wa-border);
 }
 
@@ -78,16 +90,17 @@ html, body { height: 100%; }
   width: auto;
   margin: 0;
   padding: 7px 14px;
-  border: 1px solid #c9d1d5;
+  border: 1px solid var(--wa-border);
   border-radius: 18px;
-  background: #fff;
+  background: var(--wa-white);
   color: var(--wa-text);
   font-size: 14px;
   cursor: pointer;
 }
+/* logout hover: halka red (danger) tint, same as pehle */
 .chat-page .logout-btn:hover { background: #fdecec; border-color: #e5a3a3; }
 
-.chat-page .search-box { padding: 8px 12px; background: #fff; }
+.chat-page .search-box { padding: 8px 12px; background: var(--wa-white); }
 
 .chat-page .search-box input {
   width: 100%;
@@ -96,7 +109,8 @@ html, body { height: 100%; }
   padding: 9px 14px;
   border: none;
   border-radius: 8px;
-  background: var(--wa-panel);
+  background: var(--wa-chat-bg);
+  color: var(--wa-text);
   font-size: 15px;
   outline: none;
 }
@@ -131,8 +145,8 @@ html, body { height: 100%; }
   border-bottom: 1px solid var(--wa-border);
 }
 .chat-page .user-item:hover,
-.chat-page .user-item:focus { background: #f5f6f6; outline: none; }
-.chat-page .user-item.active { background: #e9edef; }
+.chat-page .user-item:focus { background: var(--wa-hover); outline: none; }
+.chat-page .user-item.active { background: var(--wa-active); }
 
 .chat-page .user-body { flex: 1; min-width: 0; }
 
@@ -169,7 +183,7 @@ html, body { height: 100%; }
   padding: 2px 6px;
   border-radius: 10px;
   background: var(--wa-badge);
-  color: #fff;
+  color: var(--wa-white);
   font-size: 12px;
   font-weight: 600;
   text-align: center;
@@ -190,8 +204,8 @@ html, body { height: 100%; }
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #dfe5e7;
-  color: #54656f;
+  background: var(--wa-panel);
+  color: var(--wa-green-hover);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -208,7 +222,7 @@ html, body { height: 100%; }
   height: 12px;
   border-radius: 50%;
   background: var(--wa-badge);
-  border: 2px solid #fff;
+  border: 2px solid var(--wa-white);
   box-sizing: border-box;
 }
 
@@ -225,10 +239,10 @@ html, body { height: 100%; }
 }
 .chat-page .conv-icon { font-size: 12px; flex-shrink: 0; }
 
-/* Grey badge for muted chats */
-.chat-page .badge.muted { background: #8696a0; }
+/* Muted chats ka badge: muted color (white text readable) */
+.chat-page .badge.muted { background: var(--wa-muted); }
 
-/* Small green dot for "marked as unread" */
+/* Small dot for "marked as unread" */
 .chat-page .unread-dot {
   flex-shrink: 0;
   width: 10px;
@@ -253,7 +267,7 @@ html, body { height: 100%; }
   cursor: pointer;
 }
 .chat-page .menu-btn:hover,
-.chat-page .menu-btn:focus { background: #dfe5e7; outline: none; }
+.chat-page .menu-btn:focus { background: var(--wa-press); outline: none; }
 
 /* "Archived (N)" row */
 .chat-page .archived-row {
@@ -261,14 +275,14 @@ html, body { height: 100%; }
   color: var(--wa-muted);
   font-size: 14.5px;
   font-weight: 500;
-  background: #fafbfb;
+  background: var(--wa-hover);
 }
 .chat-page .archived-row .archived-arrow { font-size: 14px; }
 
 /* Archived chats (when the section is open) look a little lighter */
-.chat-page .user-item.archived-item { background: #fafbfb; }
-.chat-page .user-item.archived-item:hover { background: #f1f3f4; }
-.chat-page .user-item.archived-item.active { background: #e9edef; }
+.chat-page .user-item.archived-item { background: var(--wa-hover); }
+.chat-page .user-item.archived-item:hover { background: var(--wa-active); }
+.chat-page .user-item.archived-item.active { background: var(--wa-active); }
 
 /* The dropdown. It sits on <body>, so it is placed with position: fixed. */
 .chat-page .chat-menu {
@@ -277,8 +291,8 @@ html, body { height: 100%; }
   min-width: 180px;
   padding: 6px 0;
   border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 2px 12px rgba(11, 20, 26, 0.28);
+  background: var(--wa-white);
+  box-shadow: 0 2px 12px rgba(80, 7, 36, 0.28);
 }
 
 .chat-page .menu-item {
@@ -296,8 +310,20 @@ html, body { height: 100%; }
   cursor: pointer;
 }
 .chat-page .menu-item:hover,
-.chat-page .menu-item:focus { background: #f0f2f5; outline: none; }
-.chat-page .menu-item.danger { color: #c0392b; }
+.chat-page .menu-item:focus { background: var(--wa-hover); outline: none; }
+.chat-page .menu-item.danger { color: var(--wa-danger); }
+
+/* NAYA: disabled menu item (greyed out, click nahi hota) */
+.chat-page .menu-item:disabled { opacity: 0.5; cursor: default; }
+.chat-page .menu-item:disabled:hover { background: transparent; }
+
+/* NAYA: chhota muted "Coming soon" label, item ke neeche */
+.chat-page .menu-soon {
+  display: block;
+  margin-top: 2px;
+  color: var(--wa-muted);
+  font-size: 11.5px;
+}
 
 .chat-page .menu-label {
   padding: 6px 18px 2px;
@@ -323,10 +349,10 @@ html, body { height: 100%; }
   justify-content: center;
   text-align: center;
   padding: 24px;
-  background: var(--wa-panel);
+  background: var(--wa-chat-bg);
   color: var(--wa-muted);
 }
-.chat-page .placeholder-title { font-size: 26px; font-weight: 300; color: #41525d; margin-bottom: 10px; }
+.chat-page .placeholder-title { font-size: 26px; font-weight: 300; color: var(--wa-text); margin-bottom: 10px; }
 .chat-page .placeholder-text { font-size: 14px; line-height: 1.5; }
 
 .chat-page .chat-window {
@@ -391,7 +417,7 @@ html, body { height: 100%; }
   cursor: pointer;
 }
 .chat-page .header-btn:hover,
-.chat-page .header-btn:focus { background: #dfe5e7; outline: none; }
+.chat-page .header-btn:focus { background: var(--wa-press); outline: none; }
 .chat-page .header-btn:disabled { opacity: 0.4; cursor: default; background: transparent; }
 
 .chat-page .chat-search-bar {
@@ -399,7 +425,7 @@ html, body { height: 100%; }
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #fff;
+  background: var(--wa-white);
   border-bottom: 1px solid var(--wa-border);
 }
 
@@ -412,7 +438,8 @@ html, body { height: 100%; }
   padding: 8px 14px;
   border: none;
   border-radius: 8px;
-  background: var(--wa-panel);
+  background: var(--wa-chat-bg);
+  color: var(--wa-text);
   font-size: 15px;
   outline: none;
 }
@@ -427,13 +454,13 @@ html, body { height: 100%; }
 
 /* Highlighted words inside a message */
 .chat-page .msg-text mark {
-  background: #fff3a3;
+  background: var(--wa-mark);
   color: inherit;
   border-radius: 2px;
   padding: 0;
 }
 /* The match we are currently looking at */
-.chat-page .msg-text mark.active { background: #ff9d3c; }
+.chat-page .msg-text mark.active { background: var(--wa-mark-active); }
 
 /* ---------- Messages ---------- */
 .chat-page .messages {
@@ -464,10 +491,10 @@ html, body { height: 100%; }
 .chat-page .date-sep span {
   padding: 4px 12px;
   border-radius: 8px;
-  background: #fff;
+  background: var(--wa-white);
   color: var(--wa-muted);
   font-size: 12.5px;
-  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  box-shadow: 0 1px 0.5px rgba(80, 7, 36, 0.13);
 }
 
 .chat-page .msg-row { display: flex; }
@@ -513,7 +540,7 @@ html, body { height: 100%; }
   box-sizing: border-box;
   padding: 6px 9px 4px;
   border-radius: 8px;
-  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  box-shadow: 0 1px 0.5px rgba(80, 7, 36, 0.13);
   font-size: 14.5px;
   line-height: 1.35;
 }
@@ -525,7 +552,7 @@ html, body { height: 100%; }
   word-wrap: break-word;
   overflow-wrap: anywhere;
 }
-.chat-page .bubble.failed .msg-text { font-style: italic; color: #a33; }
+.chat-page .bubble.failed .msg-text { font-style: italic; color: var(--wa-danger); }
 
 .chat-page .msg-meta {
   display: flex;
@@ -537,7 +564,7 @@ html, body { height: 100%; }
   color: var(--wa-muted);
 }
 
-/* Ticks: grey = sent / delivered, blue = read */
+/* Ticks: halka pink = sent / delivered, accent = read */
 .chat-page .tick { color: var(--wa-tick); font-size: 12px; letter-spacing: -2px; }
 .chat-page .tick.read { color: var(--wa-tick-read); }
 
@@ -556,8 +583,8 @@ html, body { height: 100%; }
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(11, 20, 26, 0.3);
+  background: var(--wa-white);
+  box-shadow: 0 1px 3px rgba(80, 7, 36, 0.3);
   font-size: 14px;
   line-height: 26px;
   text-align: center;
@@ -569,7 +596,7 @@ html, body { height: 100%; }
 .chat-page .msg-wrap:hover .react-btn,
 .chat-page .msg-wrap.show-actions .react-btn { display: block; }
 .chat-page .react-btn:hover,
-.chat-page .react-btn:focus { background: #f0f2f5; outline: none; }
+.chat-page .react-btn:focus { background: var(--wa-active); outline: none; }
 
 /* On phones there is no hover, so the button only shows after a tap */
 @media (hover: none) {
@@ -587,8 +614,8 @@ html, body { height: 100%; }
   margin-bottom: 4px;
   padding: 4px 6px;
   border-radius: 22px;
-  background: #fff;
-  box-shadow: 0 2px 10px rgba(11, 20, 26, 0.3);
+  background: var(--wa-white);
+  box-shadow: 0 2px 10px rgba(80, 7, 36, 0.3);
   white-space: nowrap;
 }
 .chat-page .mine .react-picker { right: 0; }
@@ -608,9 +635,9 @@ html, body { height: 100%; }
   cursor: pointer;
 }
 .chat-page .react-option:hover,
-.chat-page .react-option:focus { background: #f0f2f5; outline: none; }
+.chat-page .react-option:focus { background: var(--wa-active); outline: none; }
 /* The emoji I already used on this message */
-.chat-page .react-option.chosen { background: #d9fdd3; }
+.chat-page .react-option.chosen { background: var(--wa-react-mine-bg); }
 
 /* Reactions under the bubble, grouped with counts */
 .chat-page .reactions {
@@ -630,15 +657,15 @@ html, body { height: 100%; }
   padding: 1px 6px;
   border: 1px solid var(--wa-border);
   border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 1px 1px rgba(11, 20, 26, 0.15);
+  background: var(--wa-white);
+  box-shadow: 0 1px 1px rgba(80, 7, 36, 0.15);
   font-size: 13px;
   line-height: 1.4;
 }
 .chat-page .reaction-chip .reaction-count { font-size: 11.5px; color: var(--wa-muted); }
 /* Highlight: I reacted with this emoji */
-.chat-page .reaction-chip.mine { background: #d9fdd3; border-color: #7fd6a4; }
-.chat-page .reaction-chip.mine .reaction-count { color: #1f6f4a; font-weight: 600; }
+.chat-page .reaction-chip.mine { background: var(--wa-react-mine-bg); border-color: var(--wa-react-mine-border); }
+.chat-page .reaction-chip.mine .reaction-count { color: var(--wa-green-hover); font-weight: 600; }
 
 /* ---------- Composer (input box) ---------- */
 .chat-page .composer {
@@ -657,7 +684,8 @@ html, body { height: 100%; }
   padding: 10px 14px;
   border: none;
   border-radius: 20px;
-  background: #fff;
+  background: var(--wa-white);
+  color: var(--wa-text);
   font-family: inherit;
   font-size: 15px;
   line-height: 1.3;
@@ -675,11 +703,11 @@ html, body { height: 100%; }
   border: none;
   border-radius: 50%;
   background: var(--wa-green);
-  color: #fff;
+  color: var(--wa-white);
   font-size: 18px;
   cursor: pointer;
 }
-.chat-page .send-btn:hover { background: #008f6f; }
+.chat-page .send-btn:hover { background: var(--wa-green-hover); }
 
 /* ---------- Toast (small error popup) ---------- */
 .toast {
@@ -690,8 +718,8 @@ html, body { height: 100%; }
   max-width: 90%;
   padding: 10px 16px;
   border-radius: 8px;
-  background: #323232;
-  color: #fff;
+  background: var(--wa-text);
+  color: var(--wa-white);
   font-size: 14px;
   opacity: 0;
   pointer-events: none;
@@ -725,8 +753,8 @@ html, body { height: 100%; }
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(11, 20, 26, 0.3);
+  background: var(--wa-white);
+  box-shadow: 0 1px 3px rgba(80, 7, 36, 0.3);
   color: var(--wa-muted);
   font-size: 16px;
   line-height: 26px;
@@ -739,10 +767,248 @@ html, body { height: 100%; }
 .chat-page .msg-wrap:hover .msg-menu-btn,
 .chat-page .msg-wrap.show-actions .msg-menu-btn { display: block; }
 .chat-page .msg-menu-btn:hover,
-.chat-page .msg-menu-btn:focus { background: #f0f2f5; outline: none; }
+.chat-page .msg-menu-btn:focus { background: var(--wa-active); outline: none; }
 
 /* On phones there is no hover, so the button only shows after a tap */
 @media (hover: none) {
   .chat-page .msg-wrap:hover .msg-menu-btn { display: none; }
   .chat-page .msg-wrap.show-actions .msg-menu-btn { display: block; }
 }
+
+/* =====================================================
+   HEADER ⋮ BUTTON: 3D dots, box nahi, halka animation
+   ===================================================== */
+.chat-page #chatMenuBtn {
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;     /* koi box nahi */
+  color: transparent;                /* ⋮ text chhupa diya, dots CSS se bante hain */
+  font-size: 0;
+  cursor: pointer;
+  outline: none;
+
+  /* 3 dots = 3 gradient "goliyan" (3D sphere jaisi chamak) */
+  background-image:
+    radial-gradient(circle at 35% 30%, #fff 0 12%, #f9a8d4 32%, #e11d74 65%, #9d174d 100%),
+    radial-gradient(circle at 35% 30%, #fff 0 12%, #f9a8d4 32%, #e11d74 65%, #9d174d 100%),
+    radial-gradient(circle at 35% 30%, #fff 0 12%, #f9a8d4 32%, #e11d74 65%, #9d174d 100%);
+  background-repeat: no-repeat;
+  background-size: 8px 8px, 8px 8px, 8px 8px;
+  background-position: center 5px, center 13px, center 21px;
+
+  /* neeche halki parchhai = 3D feel */
+  filter: drop-shadow(0 2px 1.5px rgba(80, 7, 36, 0.4));
+  transition: transform 0.15s ease, filter 0.15s ease, background-position 0.25s ease;
+}
+
+/* hover: dots ek ke baad ek uchhalte hain (wave) */
+.chat-page #chatMenuBtn:hover {
+  filter: drop-shadow(0 3px 2px rgba(80, 7, 36, 0.45));
+  animation: dotsWave 0.6s ease;
+}
+
+/* dabane par thoda andar dabta hai */
+.chat-page #chatMenuBtn:active {
+  transform: translateY(1px) scale(0.88);
+  filter: drop-shadow(0 1px 1px rgba(80, 7, 36, 0.4));
+}
+
+/* keyboard focus: dots thode phail jate hain */
+.chat-page #chatMenuBtn:focus-visible {
+  background-position: center 2px, center 13px, center 24px;
+}
+
+@keyframes dotsWave {
+  0%   { background-position: center 5px, center 13px, center 21px; }
+  25%  { background-position: center 0px, center 13px, center 21px; }
+  50%  { background-position: center 5px, center 8px,  center 21px; }
+  75%  { background-position: center 5px, center 13px, center 26px; }
+  100% { background-position: center 5px, center 13px, center 21px; }
+}
+
+/* =====================================================
+   SEARCH BAR: sundar pill design + slide-down animation
+   ===================================================== */
+.chat-page .chat-search-bar {
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, var(--wa-white), var(--wa-chat-bg));
+  border-bottom: 1px solid var(--wa-border);
+  box-shadow: 0 4px 14px rgba(225, 29, 116, 0.12);
+  animation: searchBarIn 0.25s ease-out;   /* khulte waqt upar se slide */
+}
+
+@keyframes searchBarIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* input (id se, kyunki HTML me class nahi hai) */
+.chat-page #chatSearchInput {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 16px 10px 42px;          /* left me icon ki jagah */
+  border: 1.5px solid var(--wa-border);
+  border-radius: 999px;
+  color: var(--wa-text);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  box-shadow: inset 0 1px 3px rgba(80, 7, 36, 0.08);
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  /* 🔍 icon (pink, SVG) input ke andar */
+  background: var(--wa-white)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d74' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E")
+    no-repeat 14px center / 18px 18px;
+}
+.chat-page #chatSearchInput::placeholder { color: var(--wa-muted); }
+.chat-page #chatSearchInput:focus {
+  border-color: var(--wa-green);
+  box-shadow: 0 0 0 4px rgba(225, 29, 116, 0.15);   /* pink glow */
+}
+
+/* "2 of 5" ek chhoti pill me; khali ho to chhup jaye */
+.chat-page .chat-search-count {
+  min-width: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--wa-active);
+  color: var(--wa-green-hover);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.chat-page .chat-search-count:empty { display: none; }
+
+/* ▲ ▼ ✕ gol buttons */
+.chat-page .chat-search-bar .icon-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--wa-active);
+  color: var(--wa-green-hover);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+.chat-page .chat-search-bar .icon-btn:hover:not(:disabled) {
+  background: var(--wa-green);
+  color: var(--wa-white);
+  transform: scale(1.1);
+}
+.chat-page .chat-search-bar .icon-btn:active:not(:disabled) { transform: scale(0.92); }
+.chat-page .chat-search-bar .icon-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* jinko animation pasand nahi (device setting), unke liye band */
+@media (prefers-reduced-motion: reduce) {
+  .chat-page #chatMenuBtn:hover,
+  .chat-page .chat-search-bar { animation: none; }
+}
+/* =====================================================
+   SIDEBAR USER SEARCH ("Search users to chat"): pill design
+   ===================================================== */
+.chat-page .search-box {
+  padding: 10px 14px;
+  background: linear-gradient(180deg, var(--wa-white), var(--wa-chat-bg));
+  border-bottom: 1px solid var(--wa-border);
+}
+
+.chat-page .search-box input#searchInput {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 11px 16px 11px 44px;          /* left me icon ki jagah */
+  border: 1.5px solid var(--wa-border);
+  border-radius: 999px;                  /* pill shape */
+  color: var(--wa-text);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  box-shadow: inset 0 1px 3px rgba(80, 7, 36, 0.08);
+  transition: border-color 0.15s, box-shadow 0.2s, transform 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+
+  /* pink 🔍 icon input ke andar */
+  background: var(--wa-white)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d74' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E")
+    no-repeat 16px center / 18px 18px;
+}
+
+.chat-page .search-box input#searchInput::placeholder { color: var(--wa-muted); }
+
+/* hover: halka pink border */
+.chat-page .search-box input#searchInput:hover { border-color: #f4a6cb; }
+
+/* focus: pink glow + thoda sa upar uthta hai */
+.chat-page .search-box input#searchInput:focus {
+  border-color: var(--wa-green);
+  box-shadow: 0 0 0 4px rgba(225, 29, 116, 0.15), 0 4px 12px rgba(225, 29, 116, 0.12);
+  transform: translateY(-1px);
+}
+
+/* browser ka default "x" (clear) button pink banao */
+.chat-page .search-box input#searchInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e11d74' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E")
+    no-repeat center / 12px 12px;
+}
+
+/* search results: hover pe thoda andar slide + pink line left me */
+.chat-page .search-results .user-item {
+  border-left: 3px solid transparent;
+  transition: background 0.15s, border-color 0.15s, padding-left 0.15s;
+}
+.chat-page .search-results .user-item:hover,
+.chat-page .search-results .user-item:focus {
+  border-left-color: var(--wa-green);
+  padding-left: 20px;
+}
+
+/* results aate waqt halka fade-in */
+.chat-page .search-results { animation: resultsIn 0.2s ease-out; }
+@keyframes resultsIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-page .search-results { animation: none; }
+  .chat-page .search-box input#searchInput:focus { transform: none; }
+}
+/* HEADER ⋮ BUTTON: simple, baaki buttons jaisa */
+.chat-page #chatMenuBtn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--wa-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  outline: none;
+}
+.chat-page #chatMenuBtn:hover,
+.chat-page #chatMenuBtn:focus { background: var(--wa-press); }

@@ -1,53 +1,56 @@
 /* =====================================================
    style.css - common styles + login / signup design
+   THEME: Rose Pink
    (chat.css can reuse the variables defined below)
    ===================================================== */
 
 /* ---------- Colors (light mode) ---------- */
 :root {
-  --bg: #f0f2f5;
-  --card-bg: #ffffff;
-  --text: #111b21;
-  --muted: #667781;
-  --border: #d1d7db;
+  --bg: #fdf2f8;              /* page background (chat bg wala) */
+  --card-bg: #ffffff;         /* card white hi rakha, pink bg pe achha dikhta hai */
+  --text: #500724;            /* main text */
+  --muted: #9d6b82;           /* muted text */
+  --border: #f5d0e3;          /* borders */
   --input-bg: #ffffff;
 
-  --primary: #00a884;
-  --primary-hover: #008f6f;
+  --primary: #e11d74;         /* accent */
+  --primary-hover: #be185d;   /* darker accent */
   --primary-text: #ffffff;
 
-  --error: #d93025;
+  --error: #c0392b;           /* danger red (same as Delete/Clear) */
   --error-bg: #fdecea;
 
-  --warning-bg: #fff8e1;
-  --warning-border: #f5c518;
-  --warning-text: #6b5000;
+  /* warning ab pink theme me (pehle yellow tha) */
+  --warning-bg: #fce7f3;
+  --warning-border: #f4a6cb;
+  --warning-text: #500724;
 
-  --shadow: 0 8px 30px rgba(11, 20, 26, 0.12);
+  --shadow: 0 8px 30px rgba(80, 7, 36, 0.12);
   --radius: 12px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 /* ---------- Colors (dark mode, follows the device setting) ---------- */
+/* Dark mode bhi rose tones me, green hata diya */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0b141a;
-    --card-bg: #202c33;
-    --text: #e9edef;
-    --muted: #8696a0;
-    --border: #374248;
-    --input-bg: #2a3942;
+    --bg: #2a0a18;
+    --card-bg: #3b1024;
+    --text: #fce7f3;
+    --muted: #d3a1bb;
+    --border: #5c1d3a;
+    --input-bg: #4a152e;
 
-    --primary: #00a884;
-    --primary-hover: #06cf9c;
-    --primary-text: #06130f;
+    --primary: #e11d74;
+    --primary-hover: #f0529a;
+    --primary-text: #ffffff;
 
     --error: #ff8a80;
     --error-bg: #3b1f1f;
 
-    --warning-bg: #3a3214;
-    --warning-border: #b38f00;
-    --warning-text: #ffe082;
+    --warning-bg: #4a152e;
+    --warning-border: #b8456f;
+    --warning-text: #fbcfe8;
 
     --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
   }
@@ -121,9 +124,10 @@ body {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
+/* focus ring ab pink */
 .auth-page input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(0, 168, 132, 0.25);
+  box-shadow: 0 0 0 3px rgba(225, 29, 116, 0.25);
 }
 
 /* ---------- Buttons ---------- */
@@ -143,12 +147,13 @@ body {
 .auth-page .btn-primary { background: var(--primary); color: var(--primary-text); }
 .auth-page .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
 
-.auth-page .btn-warning { background: var(--warning-border); color: #222; margin-top: 12px; }
+/* warning button: soft pink bg + dark text (readable) */
+.auth-page .btn-warning { background: var(--warning-border); color: var(--text); margin-top: 12px; }
 .auth-page .btn-warning:hover { filter: brightness(0.95); }
 
 .auth-page .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* ---------- Error (red) and warning (yellow) boxes ---------- */
+/* ---------- Error (red) and warning (pink) boxes ---------- */
 .auth-page .error-box {
   margin-bottom: 14px;
   padding: 10px 12px;

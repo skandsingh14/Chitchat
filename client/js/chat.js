@@ -10,6 +10,7 @@
 //   6. [BATCH A] Reactions under message bubbles
 //   7. [BATCH A] Search inside the open chat (in the browser only)
 //   8. [DELETE MSG] Delete a message for me / for everyone
+//   9. [HEADER MENU] One ⋮ menu in the chat header (Search + Disappearing soon)
 
 import { apiGet, apiPost, apiPatch, apiDelete } from "./api.js";
 import { encryptMessage, decryptMessage } from "./crypto.js";
@@ -49,8 +50,10 @@ const messageInput = $("messageInput");
 const sendBtn = $("sendBtn");
 const toast = $("toast");
 
+// Header ⋮ menu button (pehle yahan chatSearchBtn tha)
+const chatMenuBtn = $("chatMenuBtn");
+
 // Search-in-chat elements
-const chatSearchBtn = $("chatSearchBtn");
 const chatSearchBar = $("chatSearchBar");
 const chatSearchInput = $("chatSearchInput");
 const chatSearchCount = $("chatSearchCount");
@@ -90,7 +93,7 @@ let stopTypingTimer = null;
 let searchTimer = null;
 let searchSeq = 0;
 
-// chat-list menu state (also used by the message menu)
+// chat-list menu state (also used by the message menu and the header menu)
 let showArchived = false;
 let openMenu = null;                    // { el, id }
 
@@ -898,6 +901,39 @@ function closeChatSearch() {
 }
 
 // =====================================================
+// HEADER MENU: ⋮ button in the chat header
+// =====================================================
+
+function toggleChatMenu(anchorBtn) {
+  const menuId = "header-menu";
+  const wasOpen = openMenu && openMenu.id === menuId;
+  closeMenu();
+  closePicker();
+  if (wasOpen) return;
+  if (!currentChat) return; // menu sirf tab jab chat khula ho
+
+  const menu = el("div", "chat-menu");
+
+  // "Search": pehle wale 🔍 button jaisa hi kaam (toggle)
+  menu.appendChild(
+    menuItem("Search", () => {
+      closeMenu();
+      if (chatSearchOpen) closeChatSearch();
+      else openChatSearch();
+    })
+  );
+
+  // "Disappearing messages": abhi disabled, kuch nahi karta
+  const soon = menuItem("Disappearing messages", () => {});
+  soon.disabled = true;
+  soon.appendChild(el("span", "menu-soon", "Coming soon"));
+  menu.appendChild(soon);
+
+  placeMenu(menu, anchorBtn);
+  openMenu = { el: menu, id: menuId };
+}
+
+// =====================================================
 // DELETE MSG: delete for me / delete for everyone
 // =====================================================
 
@@ -1303,9 +1339,10 @@ function startApp() {
     window.location.href = "index.html";
   });
 
-  chatSearchBtn.addEventListener("click", () => {
-    if (chatSearchOpen) closeChatSearch();
-    else openChatSearch();
+  // Header ⋮ menu (stopPropagation zaroori hai, warna document click turant band kar dega)
+  chatMenuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleChatMenu(chatMenuBtn);
   });
   chatSearchClose.addEventListener("click", closeChatSearch);
   chatSearchPrev.addEventListener("click", () => stepMatch(-1));
@@ -1335,7 +1372,7 @@ function startApp() {
   });
   conversationList.addEventListener("scroll", closeMenu);
   messagesEl.addEventListener("scroll", closePicker);
-  messagesEl.addEventListener("scroll", closeMenu);   // DELETE MSG
+  messagesEl.addEventListener("scroll", closeMenu);   // DELETE MSG + header menu
   window.addEventListener("resize", closeMenu);
 
   loadConversations();
