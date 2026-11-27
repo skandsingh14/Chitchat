@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import chatRoutes from "./routes/chats.js";
 import keysRoutes from "./routes/keys.js";
+import friendsRoutes from "./routes/friends.js";
 
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
@@ -32,6 +33,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/keys", keysRoutes);
+app.use("/api/friends", friendsRoutes);
 
 // JSON 404 for unknown API routes
 app.use("/api", (req, res) => {
