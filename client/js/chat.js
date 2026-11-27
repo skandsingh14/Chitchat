@@ -11,6 +11,7 @@
 //   7. [BATCH A] Search inside the open chat (in the browser only)
 //   8. [DELETE MSG] Delete a message for me / for everyone
 //   9. [HEADER MENU] One ⋮ menu in the chat header (Search + Disappearing soon)
+//  10. [FRIENDS] Friends list: floating + button, panel, add / remove
 
 import { apiGet, apiPost, apiPatch, apiDelete } from "./api.js";
 import { encryptMessage, decryptMessage } from "./crypto.js";
@@ -72,6 +73,13 @@ const lastSeenMap = new Map();
 const typingUsers = new Set();
 const typingTimers = new Map();
 const userInfoCache = new Map();
+
+// FRIENDS: userId -> { id, username }  (newest pehle)
+const friends = new Map();
+let friendsOpen = false;
+let friendsPanel = null;   // panel (createElement se banta hai)
+let friendsList = null;    // panel ke andar <ul>
+let friendsFab = null;     // floating + button
 
 let currentChat = null;
 let openCounter = 0;
@@ -349,6 +357,142 @@ async function loadConversations() {
     showToast("Could not load chats: " + err.message);
   }
   renderConversations();
+}
+
+// =====================================================
+// FRIENDS: list, panel, add / remove
+// =====================================================
+
+// Friends panel + floating "+" button banata hai (sirf createElement, innerHTML nahi)
+function buildFriendsUI() {
+  if (!sidebar) return;
+
+  // Floating "+" button
+  friendsFab = el("button", "friends-fab", "+");
+  friendsFab.type = "button";
+  friendsFab.setAttribute("aria-label", "Friends");
+  friendsFab.addEventListener("click", openFriends);
+  sidebar.appendChild(friendsFab);
+
+  // Panel: header (← Friends) + list
+  friendsPanel = el("div", "friends-panel hidden");
+
+  const header = el("div", "friends-header");
+  const backFriends = el("button", "friends-back", "\u2190");
+  backFriends.type = "button";
+  backFriends.setAttribute("aria-label", "Back to chats");
+  backFriends.addEventListener("click", closeFriends);
+  header.appendChild(backFriends);
+  header.appendChild(el("span", "friends-title", "Friends"));
+  friendsPanel.appendChild(header);
+
+  friendsList = el("ul", "user-list friends-list");
+  friendsPanel.appendChild(friendsList);
+
+  sidebar.appendChild(friendsPanel);
+}
+
+function openFriends() {
+  if (!friendsPanel) return;
+  closeMenu();
+  friendsOpen = true;
+  sidebar.classList.add("friends-open");
+  friendsPanel.classList.remove("hidden");
+  if (friendsFab) friendsFab.classList.add("hidden");
+  renderFriends();
+}
+
+function closeFriends() {
+  if (!friendsPanel) return;
+  friendsOpen = false;
+  sidebar.classList.remove("friends-open");
+  friendsPanel.classList.add("hidden");
+  if (friendsFab) friendsFab.classList.remove("hidden");
+}
+
+// Ek friend ki row
+function buildFriendRow(friend) {
+  const item = el("li", "user-item friend-row");
+  item.tabIndex = 0;
+
+  item.appendChild(makeAvatar(friend.username, onlineUsers.has(friend.id)));
+
+  const body = el("div", "user-body");
+  body.appendChild(el("span", "user-name", friend.username));
+  item.appendChild(body);
+
+  // ✕ remove button
+  const removeBtn = el("button", "friend-remove", "\u2715");
+  removeBtn.type = "button";
+  removeBtn.setAttribute("aria-label", "Remove friend");
+  removeBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // row click (chat open) na ho
+    removeFriend(friend.id, friend.username);
+  });
+  item.appendChild(removeBtn);
+
+  // Row click: chat kholo (conversation na ho tab bhi chalega)
+  const open = () => openChat({ id: friend.id, username: friend.username });
+  item.addEventListener("click", open);
+  item.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target === item) open();
+  });
+  return item;
+}
+
+function renderFriends() {
+  if (!friendsList) return;
+  friendsList.replaceChildren();
+
+  if (friends.size === 0) {
+    friendsList.appendChild(el("li", "empty-note", "No friends yet. Add from the chat menu."));
+    return;
+  }
+
+  for (const friend of friends.values()) friendsList.appendChild(buildFriendRow(friend));
+}
+
+async function loadFriends() {
+  try {
+    const list = await apiGet("/api/friends");
+    friends.clear();
+    for (const f of list) friends.set(f.id, { id: f.id, username: f.username });
+  } catch (err) {
+    showToast("Could not load friends: " + err.message);
+  }
+  renderFriends();
+}
+
+async function addFriend(user) {
+  try {
+    const res = await apiPost("/api/friends/" + user.id, {});
+    const f = res && res.friend ? res.friend : user;
+
+    // Newest pehle: naya entry sabse upar
+    const old = Array.from(friends.values()).filter((x) => x.id !== f.id);
+    friends.clear();
+    friends.set(f.id, { id: f.id, username: f.username });
+    for (const x of old) friends.set(x.id, x);
+
+    renderFriends();
+    showToast("Added to friends");
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+// Sirf friends list se hatata hai. conversations Map / messages ko haath nahi lagata.
+async function removeFriend(id, username) {
+  closeMenu();
+  if (!window.confirm("Remove " + (username || "this user") + " from friends?")) return;
+  try {
+    await apiDelete("/api/friends/" + id);
+    friends.delete(id);
+    renderFriends();
+    showToast("Removed from friends");
+  } catch (err) {
+    showToast(err.message);
+  }
 }
 
 // =====================================================
@@ -923,6 +1067,21 @@ function toggleChatMenu(anchorBtn) {
     })
   );
 
+  // FRIENDS: "Add to friends" ya "Remove friend" (jo user abhi khula hai)
+  const chatUser = { id: currentChat.id, username: currentChat.username };
+  if (friends.has(chatUser.id)) {
+    menu.appendChild(
+      menuItem("Remove friend", () => removeFriend(chatUser.id, chatUser.username), true)
+    );
+  } else {
+    menu.appendChild(
+      menuItem("Add to friends", () => {
+        closeMenu();
+        addFriend(chatUser);
+      })
+    );
+  }
+
   // "Disappearing messages": abhi disabled, kuch nahi karta
   const soon = menuItem("Disappearing messages", () => {});
   soon.disabled = true;
@@ -1281,6 +1440,7 @@ function autoGrowInput() {
 function refreshPresenceUI() {
   updateHeader();
   renderConversations();
+  renderFriends(); // FRIENDS: online dots live update
 }
 
 // =====================================================
@@ -1295,6 +1455,8 @@ function startApp() {
   }
   myName.textContent = me.username || "";
   myAvatar.textContent = (me.username || "?").charAt(0).toUpperCase();
+
+  buildFriendsUI(); // FRIENDS: + button aur panel banao
 
   socket = connectSocket();
 
@@ -1376,6 +1538,7 @@ function startApp() {
   window.addEventListener("resize", closeMenu);
 
   loadConversations();
+  loadFriends(); // FRIENDS: ek baar server se list lao
 }
 
 // Not logged in? Go to the login page. Otherwise start the app.

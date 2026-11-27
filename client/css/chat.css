@@ -1012,3 +1012,112 @@ html, body { height: 100%; }
 }
 .chat-page #chatMenuBtn:hover,
 .chat-page #chatMenuBtn:focus { background: var(--wa-press); }
+
+/* =====================================================
+   FRIENDS LIST (NAYA): floating + button, panel, rows
+   ===================================================== */
+
+/* sidebar ko relative banaya taaki + button uske andar corner me rahe */
+.chat-page .sidebar { position: relative; }
+
+/* Floating "+" button (bottom-right, sidebar ke andar) */
+.chat-page .friends-fab {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin: 0;
+  padding: 0 0 3px;
+  border: none;
+  border-radius: 50%;
+  background: var(--wa-green);
+  color: #fff;                              /* sirf "+" white */
+  font-size: 30px;
+  line-height: 1;
+  box-shadow: 0 3px 8px var(--wa-muted);
+  cursor: pointer;
+}
+.chat-page .friends-fab:hover,
+.chat-page .friends-fab:focus { background: var(--wa-green-hover); outline: none; }
+
+/* User search chal rahi ho to + button chhupa do (results na dhake) */
+.chat-page .sidebar.searching .friends-fab { display: none; }
+
+/* Lists ke neeche jagah, taaki + button last row ko na dhake */
+.chat-page .conversation-list,
+.chat-page .search-results,
+.chat-page .friends-list { padding-bottom: 84px; }
+
+/* Friends panel */
+.chat-page .friends-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-page .friends-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--wa-panel);
+  border-bottom: 1px solid var(--wa-border);
+}
+
+.chat-page .friends-back {
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--wa-text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.chat-page .friends-back:hover,
+.chat-page .friends-back:focus { background: var(--wa-press); outline: none; }
+
+.chat-page .friends-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--wa-text);
+}
+
+.chat-page .friends-list { flex: 1; }
+
+/* Ek friend ki row ka ✕ (remove) button */
+.chat-page .friend-remove {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--wa-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.chat-page .friend-remove:hover,
+.chat-page .friend-remove:focus {
+  background: var(--wa-press);
+  color: var(--wa-danger);
+  outline: none;
+}
+
+/* Friends panel khula ho to chat list / search chhupa do */
+.chat-page .sidebar.friends-open .search-box,
+.chat-page .sidebar.friends-open .search-results,
+.chat-page .sidebar.friends-open .list-title,
+.chat-page .sidebar.friends-open .conversation-list { display: none; }
