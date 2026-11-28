@@ -526,7 +526,7 @@ function confirmRemoveFriend(username) {
     const icon = el("div", "confirm-icon", "!");
     icon.setAttribute("aria-hidden", "true");
     const title = el("h2", "", "Remove friend?");
-    const message = el("p", "", "Kya tum " + (username || "is friend") + " ko friends list se remove karna chahte ho?");
+    const message = el("p", "", "Are you sure you want to remove " + (username || "this friend") + " from your friends list?");
     const actions = el("div", "confirm-actions");
     const cancelBtn = el("button", "confirm-cancel", "No, keep");
     const removeBtn = el("button", "confirm-remove", "Yes, remove");
